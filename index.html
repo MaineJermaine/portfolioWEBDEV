@@ -100,31 +100,6 @@
     .scroll-smooth {
       scroll-behavior: smooth;
     }
-   .video-loader {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      items-center: center;
-      gap: 12px;
-      z-index: 10;
-    }
-    
-    .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid rgba(0, 255, 136, 0.1);
-      border-top: 3px solid #00ff88;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
   </style>
   <style>body { box-sizing: border-box; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -339,6 +314,20 @@
         <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Mastering multiple programming languages and frameworks</li>
         <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Building foundational knowledge for future IT career</li>
        </ul>
+      </div><!-- Experience Item 4 -->
+      <div class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-8 card-hover">
+       <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+        <div>
+         <h3 class="font-display text-xl font-semibold text-cyan-400">Discord Bot Deployment</h3>
+         <p class="text-gray-300 font-mono-code">Administrative Bot</p>
+        </div><span class="font-mono-code text-gray-500 text-sm">Completed</span>
+       </div>
+       <ul class="space-y-2 text-gray-400">
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Built a fully functional Discord bot with blacklist filtering to automatically detect and delete messages containing restricted words</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Implemented server administration features including user kick and ban commands with proper authorization</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Developed member verification system with automated greeting messages and humanity verification for new users</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Deployed bot to run 24/7 with stable and reliable uptime</li>
+       </ul>
       </div>
      </div>
     </div>
@@ -483,7 +472,7 @@
       <a href="https://wa.me/6597356254" target="_blank" class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-6 card-hover block">
         <div class="text-3xl mb-3">💬</div>
         <h4 class="font-display font-semibold mb-2">WhatsApp</h4>
-        <p class="text-emerald-400 font-mono-code text-sm">+65 9735 6254</p>
+        <p class="text-emerald-400 font-mono-code text-sm">+65 9735 6254<w/p>
       </a>
 
       <a href="https://t.me/xdrkp" target="_blank" class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-6 card-hover block">
@@ -497,11 +486,11 @@
         <h4 class="font-display font-semibold mb-2">Instagram</h4>
         <p class="text-cyan-400 font-mono-code text-sm">@xdrkp_</p>
       </a>
-      
-      <a href="www.linkedin.com/in/azri-aidir-1519853aa" target="_blank" class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-6 card-hover block">
-        <div class="text-3xl mb-3">🔗</div>
-        <h4 class="font-display font-semibold mb-2">LinkedIn</h4>
-        <p class="text-cyan-400 font-mono-code text-sm">Azri Aidir</p>
+
+      <a href="https://instagram.com/xdrkp_" target="_blank" class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-6 card-hover block">
+        <div class="text-3xl mb-3">📸</div>
+        <h4 class="font-display font-semibold mb-2">Instagram</h4>
+        <p class="text-cyan-400 font-mono-code text-sm">@xdrkp_</p>
       </a>
 
       <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
@@ -723,25 +712,21 @@ PROJECTS & ACHIEVEMENTS
   const projects = [
     {
       title: "Automated Initial Whatsapp Sales",
-      description: "Designed and implemented the Chat Conversation System with a focus on user-friendliness and effectiveness...",
+      description: "Designed and implemented the Chat Conversation System with a focus on user-friendliness and effectiveness. Built full CRUD functionality for managing chat leads, customer profiles, chat takeover and transfers including creation, editing, deletion, filtering, and search capabilities.",
       thumbnail: "WEBDEV7.png",
-      images: ["WEBDEV1.png", "WEBDEV2.png", "WEBDEV3.png", "WEBDEV4.png", "WEBDEV5.png", "WEBDEV6.png", "WEBDEV7.png"]
+      images: ["WEBDEV1.png", "WEBDEV2.png", "WEBDEV3.png", "WEBDEV4.png", "WEBDEV5.png", "WEBDEV6.png", "WEBDEV7.png"] // Replace with actual image URLs
     },
     {
       title: "Roblox Horror Experiences",
-      description: "These experiences blend psychological horror with innovative physics...",
+      description: "These experiences blend psychological horror with innovative physics, tasking players with escaping a high-security facility while infected by the 'Bobospread' - a viral phenomenon that turns others into mindless entities while leaving the player as a unique, self-aware carrier. As a special' Bobo navigating eerie, liminal spaces like Room 56, the player must use custom sprint and dash mechanics to avoid containment and find an exit before their sanity fails. This biological dread is matched by a surreal journey through the Void, where survival depends on mastering a multidirectional gravity system that shifts your orientation based on the surface you touch. Whether you are clinging upside down to floating blocks or sprinting through red-lit corridors, the ultimate goal remains a desperate flight toward the center of the void to return to Earth, all while being hunted by an environment designed to keep you trapped.",
       thumbnail: "ROBLOX10.png",
-      images: [
-        "https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/totalvoid.mp4", 
-        "https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/welcometoyourhome.mp4", 
-        "ROBLOX1.png", "ROBLOX2.png", "ROBLOX3.png", "ROBLOX4.png", "ROBLOX6.png", "ROBLOX8.png", "ROBLOX9.png", "ROBLOX10.png", "ROBLOX11.png", "ROBLOX12.png", "ROBLOX13.png", "ROBLOX15.png"
-      ]
+      images: ["totalvoid.mp4", "welcometoyourhome.mp4", "ROBLOX1.png", "ROBLOX2.png", "ROBLOX3.png", "ROBLOX4.png", "ROBLOX6.png", "ROBLOX8.png", "ROBLOX9.png", "ROBLOX10.png", "ROBLOX11.png", "ROBLOX12.png", "ROBLOX13.png", "ROBLOX15.png"]
     },
     {
       title: "Retro Platformer",
-      description: "I created a NYP Badminton CCA website serves as a digital hub...",
+      description: "I created a NYP Badminton CCA website serves as a digital hub for both current players and prospective student-athletes. Its design highlights the team’s organizational structure—introducing the 'Teachers-in-charge' and student leaders—alongside a dynamic 'History Gallery' that celebrates past victories and training sessions. By integrating an easy-to-use registration form and clear links to social media platforms, the site effectively fosters engagement and simplifies the recruitment process. The clean, purple-themed layout mirrors the energy of the court, making it an inviting space for anyone looking to join the NYP badminton family.",
       thumbnail: "ROBLOX10.png",
-      images: ["https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/UXwebsite.mp4"]
+      images: ["UXwebsite.mp4"]
     }
   ];
 
@@ -754,24 +739,15 @@ PROJECTS & ACHIEVEMENTS
     const container = document.getElementById('screenshot-container');
     const desc = document.getElementById('project-desc');
     
-    // Use 'idx' to create unique IDs for the loaders
-    container.innerHTML = projects[index].images.map((file, idx) => {
+    container.innerHTML = projects[index].images.map(file => {
+      // Check if the filename ends with .mp4
       if (file.toLowerCase().endsWith('.mp4')) {
         return `
-          <div class="relative min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
-            <div id="loader-${idx}" class="video-loader">
-              <div class="spinner"></div>
-              <p class="font-mono-code text-emerald-400 text-xs animate-pulse">LOADING_BUFFER_...</p>
-            </div>
-            <video 
-              src="${file}" 
-              class="max-w-full max-h-full object-contain" 
-              autoplay muted loop playsinline 
-              oncanplay="document.getElementById('loader-${idx}').style.display='none';"
-              onwaiting="document.getElementById('loader-${idx}').style.display='flex';">
-            </video>
+          <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
+            <video src="${file}" class="max-w-full max-h-full object-contain" autoplay muted loop playsinline></video>
           </div>`;
       } else {
+        // Otherwise, treat it as a normal image
         return `
           <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
             <img src="${file}" class="max-w-full max-h-full object-contain" alt="Screenshot">
@@ -797,17 +773,3 @@ PROJECTS & ACHIEVEMENTS
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
