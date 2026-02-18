@@ -1,0 +1,750 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azri's IT Portfolio</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    .font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.8; }
+    }
+    
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+    
+    @keyframes blink {
+      0%, 50% { border-color: #00ff88; }
+      51%, 100% { border-color: transparent; }
+    }
+    
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .animate-pulse-glow {
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    .typing-effect {
+      overflow: hidden;
+      white-space: nowrap;
+      border-right: 3px solid #00ff88;
+      animation: typing 2s steps(40) forwards, blink 1s step-end infinite;
+    }
+    
+    .grid-bg {
+      background-image: 
+        linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 255, 136, 0.15);
+    }
+    
+    .tech-border {
+      position: relative;
+    }
+    
+    .tech-border::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      pointer-events: none;
+    }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #00ff88, #00d4ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .scroll-smooth {
+      scroll-behavior: smooth;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto scroll-smooth">
+  <div id="app-wrapper" class="min-h-full w-full bg-slate-950 text-gray-100"><!-- Floating Background Elements -->
+   <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-20 left-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse-glow"></div>
+    <div class="absolute bottom-40 right-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 1s;"></div>
+    <div class="absolute top-1/2 left-1/2 w-80 h-80 bg-emerald-400/5 rounded-full blur-3xl animate-pulse-glow" style="animation-delay: 0.5s;"></div>
+   </div><!-- Navigation -->
+   <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-emerald-500/20">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+     <div class="flex items-center gap-2">
+      <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-lg flex items-center justify-center"><span class="text-slate-950 font-bold font-mono-code text-sm">&lt;/&gt;</span>
+      </div><span class="font-display font-semibold text-lg">Azri</span>
+     </div>
+     <div class="hidden md:flex items-center gap-8 font-mono-code text-sm"><a href="#about" class="text-gray-400 hover:text-emerald-400 transition-colors">about()</a> <a href="#experience" class="text-gray-400 hover:text-emerald-400 transition-colors">experience()</a> <a href="#skills" class="text-gray-400 hover:text-emerald-400 transition-colors">skills()</a> <a href="#contact" class="text-gray-400 hover:text-emerald-400 transition-colors">contact()</a>
+     </div><button id="resume-btn-nav" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-lg transition-all font-mono-code text-sm"> download.resume() </button>
+    </div>
+   </nav><!-- Hero Section -->
+   <section class="relative min-h-screen flex items-center justify-center grid-bg pt-20">
+    <div class="max-w-6xl mx-auto px-6 py-20 flex flex-col lg:flex-row items-center gap-12">
+     <div class="flex-1 text-center lg:text-left">
+      <div class="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full mb-6"><span class="font-mono-code text-emerald-400 text-sm">🎓 Nanyang Polytechnic | Diploma in IT</span>
+      </div>
+      <h1 id="hero-name" class="font-display text-5xl md:text-7xl font-bold mb-4 gradient-text">Azri Bin Aidir</h1>
+      <h2 id="hero-title" class="font-display text-2xl md:text-3xl text-gray-300 mb-2">Game Developer &amp; Coder</h2>
+      <p class="text-emerald-400 font-mono-code mb-6">17 years old | Singapore</p>
+      <p id="hero-tagline" class="font-mono-code text-emerald-400 text-lg mb-8 typing-effect inline-block">Creating immersive games and web experiences_</p>
+      <div class="flex flex-wrap gap-4 justify-center lg:justify-start"><button id="resume-btn-hero" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all font-display text-lg flex items-center gap-3 card-hover">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg> Download Resume </button> <a href="#contact" class="px-8 py-4 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 font-bold rounded-xl transition-all font-display text-lg"> Get In Touch </a>
+      </div>
+     </div>
+     <div class="flex-1 flex justify-center">
+      <div class="relative animate-float">
+       <div class="w-72 h-72 md:w-96 md:h-96 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 rounded-3xl border border-emerald-500/30 flex items-center justify-center tech-border">
+        <div class="text-center p-8">
+         <div class="text-8xl mb-4">
+          🎮
+         </div>
+         <div class="font-mono-code text-emerald-400 text-sm"><span class="text-gray-500">const</span> developer = {<br><span class="pl-4">passion: <span class="text-cyan-400">"games"</span>,</span><br><span class="pl-4">focus: <span class="text-cyan-400">"roblox"</span></span><br>
+           };
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
+     <div class="w-6 h-10 border-2 border-emerald-500/50 rounded-full flex justify-center">
+      <div class="w-1 h-3 bg-emerald-400 rounded-full mt-2 animate-bounce"></div>
+     </div>
+    </div>
+   </section><!-- About Section -->
+   <section id="about" class="py-24 relative">
+    <div class="max-w-6xl mx-auto px-6">
+     <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">01.</span>
+      <h2 class="font-display text-4xl font-bold">About Me</h2>
+      <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+     </div>
+     <div class="grid md:grid-cols-2 gap-12">
+      <div>
+       <p id="about-text" class="text-gray-300 text-lg leading-relaxed mb-8">I'm Azri Bin Aidir, a 17-year-old aspiring developer and game creator currently pursuing a Diploma in Information Technology at Singapore Nanyang Polytechnic. I have hands-on experience in game development through Roblox Studio and Hopscotch, and I'm proficient in multiple programming languages including Luau, JavaScript, Python, HTML, and CSS. I'm passionate about creating engaging digital experiences and continuously expanding my technical skill set.</p>
+       <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6">
+        <h3 class="font-mono-code text-emerald-400 mb-4">// Key Info</h3>
+        <div class="space-y-3">
+         <div class="flex justify-between"><span class="text-gray-400">Age:</span> <span class="text-emerald-400">17 years old</span>
+         </div>
+         <div class="flex justify-between"><span class="text-gray-400">Location:</span> <span class="text-emerald-400">Singapore</span>
+         </div>
+         <div class="flex justify-between"><span class="text-gray-400">Education:</span> <span class="text-emerald-400">Nanyang Polytechnic</span>
+         </div>
+         <div class="flex justify-between"><span class="text-gray-400">Specialization:</span> <span class="text-emerald-400">Game Development</span>
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+       <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
+        <div class="text-4xl mb-3">
+         🎓
+        </div>
+        <h4 class="font-display font-semibold text-lg mb-2">Education</h4>
+        <p class="text-gray-400 text-sm">Diploma in IT</p>
+        <p class="text-gray-500 text-xs mt-2">Nanyang Polytechnic</p>
+       </div>
+       <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover">
+        <div class="text-4xl mb-3">
+         🎮
+        </div>
+        <h4 class="font-display font-semibold text-lg mb-2">Games</h4>
+        <p class="text-gray-400 text-sm">Roblox Studio</p>
+        <p class="text-gray-500 text-xs mt-2">Hopscotch</p>
+       </div>
+       <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover">
+        <div class="text-4xl mb-3">
+         💻
+        </div>
+        <h4 class="font-display font-semibold text-lg mb-2">Languages</h4>
+        <p class="text-gray-400 text-sm">5+ Languages</p>
+        <p class="text-gray-500 text-xs mt-2">Luau, JavaScript &amp; More</p>
+       </div>
+       <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
+        <div class="text-4xl mb-3">
+         🌟
+        </div>
+        <h4 class="font-display font-semibold text-lg mb-2">Passion</h4>
+        <p class="text-gray-400 text-sm">Game &amp; Web Dev</p>
+        <p class="text-gray-500 text-xs mt-2">Always Learning</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section id="projects" class="py-24 relative overflow-hidden">
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="flex items-center gap-4 mb-12">
+      <span class="font-mono-code text-emerald-400 text-xl">02.5</span>
+      <h2 class="font-display text-4xl font-bold">Featured Projects</h2>
+      <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8 mb-16">
+      <button onclick="showProject(0)" class="group bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-4 text-left card-hover focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <div class="aspect-video bg-slate-800 rounded-xl mb-4 overflow-hidden border border-emerald-500/10">
+          <img src="WEBDEV2.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Thumbnail">
+        </div>
+        <h3 class="font-display font-bold text-xl text-emerald-400 mb-2">Automated Initial WhatsApp Sales</h3>
+        <p class="text-gray-400 text-sm">A comprehensive sales automation platform designed to streamline customer interactions on WhatsApp by integrating an AI Auto-Reply Engine with structured lead management. Features include intelligent inquiry response, centralized management dashboard, customer profiling, lead scoring with smart prioritization, and comprehensive reporting analytics.</p>
+      </button>
+
+      <button onclick="showProject(1)" class="group bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-4 text-left card-hover focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <div class="aspect-video bg-slate-800 rounded-xl mb-4 overflow-hidden border border-emerald-500/10">
+          <img src="ROBLOX16.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Thumbnail">
+        </div>
+        <h3 class="font-display font-bold text-xl text-emerald-400 mb-2">Roblox Horror Experiences</h3>
+        <p class="text-gray-400 text-sm">Eerie and uncanny roblox horror experiences coupled with custom sprint, dash and zoom mechanics accompanied by a terrifying atmosphere and ambience.</p>
+      </button>
+
+      <button onclick="showProject(2)" class="group bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-4 text-left card-hover focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <div class="aspect-video bg-slate-800 rounded-xl mb-4 overflow-hidden border border-emerald-500/10">
+          <img src="UXWEBSITE1.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Thumbnail">
+        </div>
+        <h3 class="font-display font-bold text-xl text-emerald-400 mb-2">UX CCA Website Demo</h3>
+        <p class="text-gray-400 text-sm">A vibrant and user-friendly web portal designed to showcase the spirit, history, and community of the Nanyang Polytechnic Badminton CCA. It features a comprehensive overview of the team, past achievements, and an interactive sign-up process for aspiring members.</p>
+      </button>
+    </div>
+
+    <div id="project-viewer" class="relative w-full aspect-video max-h-[80vh] bg-slate-900 border-y border-emerald-500/30 overflow-hidden group">
+      <div id="screenshot-container" class="flex transition-transform duration-500 h-full">
+        <div class="min-w-full h-full bg-slate-800 flex items-center justify-center text-gray-500 font-mono-code italic text-sm">Select a project above to view screenshots_</div>
+      </div>
+
+      <button onclick="scrollScreenshots(-1)" class="absolute left-0 top-0 bottom-0 w-24 flex items-center justify-start pl-6 bg-gradient-to-r from-slate-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">←</div>
+      </button>
+
+      <button onclick="scrollScreenshots(1)" class="absolute right-0 top-0 bottom-0 w-24 flex items-center justify-end pr-6 bg-gradient-to-l from-slate-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+        <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">→</div>
+      </button>
+    </div>
+    <div class="mt-4 text-center">
+        <p id="project-desc" class="text-gray-400 font-mono-code text-sm uppercase tracking-widest">No project selected</p>
+    </div>
+  </div>
+</section>
+   <!-- Experience Section -->
+   <section id="experience" class="py-24 bg-slate-900/30">
+    <div class="max-w-6xl mx-auto px-6">
+     <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">02.</span>
+      <h2 class="font-display text-4xl font-bold">Experience</h2>
+      <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+     </div>
+     <div class="space-y-8"><!-- Experience Item 1 -->
+      <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-8 card-hover">
+       <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+        <div>
+         <h3 class="font-display text-xl font-semibold text-emerald-400">Game Developer</h3>
+         <p class="text-gray-300 font-mono-code">Roblox Studio</p>
+        </div><span class="font-mono-code text-gray-500 text-sm">2023 - Present</span>
+       </div>
+       <ul class="space-y-2 text-gray-400">
+        <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Developed engaging Roblox games using Luau scripting language</li>
+        <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Created gameplay mechanics, UI systems, and player interactions</li>
+        <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Gained experience in game design principles and user engagement</li>
+       </ul>
+      </div><!-- Experience Item 2 -->
+      <div class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-8 card-hover">
+       <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+        <div>
+         <h3 class="font-display text-xl font-semibold text-cyan-400">Game Creator</h3>
+         <p class="text-gray-300 font-mono-code">Hopscotch</p>
+        </div><span class="font-mono-code text-gray-500 text-sm">2022 - 2023</span>
+       </div>
+       <ul class="space-y-2 text-gray-400">
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Built interactive games and apps on the Hopscotch platform</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Learned game development fundamentals and visual programming</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Experimented with creative ideas and game mechanics</li>
+       </ul>
+      </div><!-- Experience Item 3 -->
+      <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-8 card-hover">
+       <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+        <div>
+         <h3 class="font-display text-xl font-semibold text-emerald-400">Nanyang Polytechnic Student</h3>
+         <p class="text-gray-300 font-mono-code">Diploma in Information Technology</p>
+        </div><span class="font-mono-code text-gray-500 text-sm">Current</span>
+       </div>
+       <ul class="space-y-2 text-gray-400">
+        <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Studying comprehensive IT curriculum covering networking, databases, and development</li>
+        <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Mastering multiple programming languages and frameworks</li>
+        <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Building foundational knowledge for future IT career</li>
+       </ul>
+      </div>
+     </div>
+    </div>
+   </section>
+   <!-- Skills Section -->
+   <section id="skills" class="py-24">
+    <div class="max-w-6xl mx-auto px-6">
+     <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">03.</span>
+      <h2 class="font-display text-4xl font-bold">Programming Languages &amp; Skills</h2>
+      <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
+     </div>
+     <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6"><!-- Luau -->
+      <div class="bg-slate-950/50 border border-emerald-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
+       <div class="text-5xl mb-4">
+        🌙
+       </div>
+       <h3 class="font-display font-semibold text-lg mb-2" id="skill-1">Luau</h3>
+       <p class="text-gray-400 text-sm">Game scripting for Roblox</p>
+       <div class="mt-4 w-full bg-slate-900 rounded-full h-2">
+        <div class="bg-emerald-500 h-2 rounded-full" style="width: 85%;"></div>
+       </div>
+      </div><!-- JavaScript -->
+      <div class="bg-slate-950/50 border border-cyan-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
+       <div class="text-5xl mb-4">
+        ⚡
+       </div>
+       <h3 class="font-display font-semibold text-lg mb-2" id="skill-2">JavaScript</h3>
+       <p class="text-gray-400 text-sm">Web interactivity &amp; development</p>
+       <div class="mt-4 w-full bg-slate-900 rounded-full h-2">
+        <div class="bg-cyan-400 h-2 rounded-full" style="width: 80%;"></div>
+       </div>
+      </div><!-- Python -->
+      <div class="bg-slate-950/50 border border-emerald-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
+       <div class="text-5xl mb-4">
+        🐍
+       </div>
+       <h3 class="font-display font-semibold text-lg mb-2" id="skill-3">Python</h3>
+       <p class="text-gray-400 text-sm">Scripting &amp; automation</p>
+       <div class="mt-4 w-full bg-slate-900 rounded-full h-2">
+        <div class="bg-emerald-500 h-2 rounded-full" style="width: 75%;"></div>
+       </div>
+      </div><!-- HTML & CSS -->
+      <div class="bg-slate-950/50 border border-cyan-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
+       <div class="text-5xl mb-4">
+        🎨
+       </div>
+       <h3 class="font-display font-semibold text-lg mb-2" id="skill-4">HTML &amp; CSS</h3>
+       <p class="text-gray-400 text-sm">Web design &amp; structure</p>
+       <div class="mt-4 w-full bg-slate-900 rounded-full h-2">
+        <div class="bg-cyan-400 h-2 rounded-full" style="width: 90%;"></div>
+       </div>
+      </div><!-- Game Dev -->
+      <div class="bg-slate-950/50 border border-emerald-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
+       <div class="text-5xl mb-4">
+        🎮
+       </div>
+       <h3 class="font-display font-semibold text-lg mb-2" id="skill-5">Game Development</h3>
+       <p class="text-gray-400 text-sm">Roblox &amp; Hopscotch</p>
+       <div class="mt-4 w-full bg-slate-900 rounded-full h-2">
+        <div class="bg-emerald-500 h-2 rounded-full" style="width: 85%;"></div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+    <section id="certificates" class="py-24 relative overflow-hidden">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="flex items-center gap-4 mb-12">
+        <span class="font-mono-code text-cyan-400 text-xl">03.5</span>
+        <h2 class="font-display text-4xl font-bold">Certifications</h2>
+        <div class="flex-1 h-px bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover group">
+          <div class="w-12 h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-6 border border-cyan-500/30">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-display font-bold text-xl mb-2 text-white">User Experience Design Fundamentalse</h3>
+          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by : IBM SKILLSBUILD</p>
+          <div class="flex items-center justify-between mt-auto">
+            <span class="text-xs font-mono-code text-cyan-400/60">REF: IT-2025-001</span>
+            <a href="https://students.yourlearning.ibm.com/credential/CREDLY-ae2e453d-5311-41a0-be95-b217e0c4670f" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">
+              View Credentials 
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 card-hover group">
+          <div class="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-6 border border-emerald-500/30">
+            <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h3 class="font-display font-bold text-xl mb-2 text-white">Web Development Fundamentals</h3>
+          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by : IBM SKILLSBUILD</p>
+          <div class="flex items-center justify-between mt-auto">
+            <span class="text-xs font-mono-code text-emerald-400/60">REF: CS-6621-NYP</span>
+            <a href="https://students.yourlearning.ibm.com/credential/CREDLY-ce744ad1-ca21-498e-a9ea-8c01f792977d" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">
+              View Credentials 
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover group">
+          <div class="w-12 h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-6 border border-cyan-500/30">
+            <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+            </svg>
+          </div>
+          <h3 class="font-display font-bold text-xl mb-2 text-white">AI Fluency: Framework & Foundations</h3>
+          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by: Anthropic Academy</p>
+          <div class="flex items-center justify-between mt-auto">
+            <span class="text-xs font-mono-code text-cyan-400/60">REF: WD-FCC-9920</span>
+            <a href="https://verify.skilljar.com/c/rxpqzmx7xag4" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">
+              View Credentials 
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+   <!-- Contact Section -->
+   <section id="contact" class="py-24 bg-slate-900/30">
+    <div class="max-w-4xl mx-auto px-6 text-center">
+     <div class="flex items-center justify-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">04.</span>
+      <h2 class="font-display text-4xl font-bold">Get In Touch</h2>
+     </div>
+     <p class="text-gray-400 text-lg mb-12 max-w-2xl mx-auto">I'm always interested in collaborating on exciting projects, learning opportunities, and connecting with fellow developers. Feel free to reach out!</p>
+     <div class="grid md:grid-cols-3 gap-6 mb-12">
+      <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
+       <div class="text-3xl mb-3">
+        📧
+       </div>
+       <h4 class="font-display font-semibold mb-2">Email</h4>
+       <p id="contact-email" class="text-emerald-400 font-mono-code text-sm">stupidseraphine@example.com</p>
+      </div>
+      <div class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-6 card-hover">
+       <div class="text-3xl mb-3">
+        📱
+       </div>
+       <h4 class="font-display font-semibold mb-2">Phone</h4>
+       <p id="contact-phone" class="text-cyan-400 font-mono-code text-sm">+65 9735 6254</p>
+      </div>
+      <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
+       <div class="text-3xl mb-3">
+        📍
+       </div>
+       <h4 class="font-display font-semibold mb-2">Location</h4>
+       <p id="contact-location" class="text-emerald-400 font-mono-code text-sm">Singapore</p>
+      </div>
+     </div><button id="resume-btn-contact" class="px-12 py-5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all font-display text-xl inline-flex items-center gap-3 card-hover">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+      </svg> Download My Resume </button>
+    </div>
+   </section><!-- Footer -->
+   <footer class="py-8 border-t border-emerald-500/20">
+    <div class="max-w-6xl mx-auto px-6 text-center">
+     <p class="font-mono-code text-gray-500 text-sm">&lt;/&gt; Built by Azri Bin Aidir | © 2024</p>
+    </div>
+   </footer>
+  </div>
+  <script>
+    const defaultConfig = {
+      hero_name: "Azri Bin Aidir",
+      hero_title: "Game Developer & Coder",
+      hero_tagline: "Creating immersive games and web experiences_",
+      about_text: "I'm Azri Bin Aidir, a 17-year-old aspiring developer and game creator currently pursuing a Diploma in Information Technology at Singapore Nanyang Polytechnic. I have hands-on experience in game development through Roblox Studio and Hopscotch, and I'm proficient in multiple programming languages including Luau, JavaScript, Python, HTML, and CSS. I'm passionate about creating engaging digital experiences and continuously expanding my technical skill set.",
+      skill_1: "Luau",
+      skill_2: "JavaScript",
+      skill_3: "Python",
+      skill_4: "HTML & CSS",
+      skill_5: "Game Development",
+      contact_email: "your.email@example.com",
+      contact_phone: "+65 9735 6254",
+      contact_location: "Singapore",
+      primary_color: "#10b981",
+      secondary_color: "#0f172a",
+      text_color: "#f3f4f6",
+      accent_color: "#22d3ee",
+      surface_color: "#1e293b",
+      font_family: "Space Grotesk",
+      font_size: 16
+    };
+    
+    function downloadResume() {
+      const resumeContent = `
+    
+RESUME
+======
+
+${window.elementSdk?.config?.hero_name || defaultConfig.hero_name}
+${window.elementSdk?.config?.hero_title || defaultConfig.hero_title}
+Age: 17 | Singapore
+
+CONTACT
+-------
+Email: ${window.elementSdk?.config?.contact_email || defaultConfig.contact_email}
+Phone: ${window.elementSdk?.config?.contact_phone || defaultConfig.contact_phone}
+Location: ${window.elementSdk?.config?.contact_location || defaultConfig.contact_location}
+
+ABOUT
+-----
+${window.elementSdk?.config?.about_text || defaultConfig.about_text}
+
+EDUCATION
+---------
+Diploma in Information Technology
+Singapore Nanyang Polytechnic
+
+PROGRAMMING LANGUAGES
+---------------------
+• ${window.elementSdk?.config?.skill_1 || defaultConfig.skill_1}
+• ${window.elementSdk?.config?.skill_2 || defaultConfig.skill_2}
+• ${window.elementSdk?.config?.skill_3 || defaultConfig.skill_3}
+• ${window.elementSdk?.config?.skill_4 || defaultConfig.skill_4}
+• ${window.elementSdk?.config?.skill_5 || defaultConfig.skill_5}
+
+EXPERIENCE
+----------
+Game Developer - Roblox Studio (2023 - Present)
+• Developed engaging Roblox games using Luau scripting language
+• Created gameplay mechanics, UI systems, and player interactions
+• Gained experience in game design principles and user engagement
+
+Game Creator - Hopscotch (2022 - 2023)
+• Built interactive games and apps on the Hopscotch platform
+• Learned game development fundamentals and visual programming
+• Experimented with creative ideas and game mechanics
+
+PROJECTS & ACHIEVEMENTS
+-----------------------
+• Multiple published Roblox games
+• Completed projects on Hopscotch platform
+• Pursuing Diploma in IT with focus on software development
+      `.trim();
+      
+      const blob = new Blob([resumeContent], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Azri_Bin_Aidir_Resume.txt';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+    
+    document.getElementById('resume-btn-nav').addEventListener('click', downloadResume);
+    document.getElementById('resume-btn-hero').addEventListener('click', downloadResume);
+    document.getElementById('resume-btn-contact').addEventListener('click', downloadResume);
+    
+    async function onConfigChange(config) {
+      const c = { ...defaultConfig, ...config };
+      
+      document.getElementById('hero-name').textContent = c.hero_name;
+      document.getElementById('hero-title').textContent = c.hero_title;
+      document.getElementById('hero-tagline').textContent = c.hero_tagline;
+      document.getElementById('about-text').textContent = c.about_text;
+      document.getElementById('skill-1').textContent = c.skill_1;
+      document.getElementById('skill-2').textContent = c.skill_2;
+      document.getElementById('skill-3').textContent = c.skill_3;
+      document.getElementById('skill-4').textContent = c.skill_4;
+      document.getElementById('skill-5').textContent = c.skill_5;
+      document.getElementById('contact-email').textContent = c.contact_email;
+      document.getElementById('contact-phone').textContent = c.contact_phone;
+      document.getElementById('contact-location').textContent = c.contact_location;
+      
+      const fontStack = `${c.font_family}, sans-serif`;
+      document.querySelectorAll('.font-display').forEach(el => {
+        el.style.fontFamily = fontStack;
+      });
+      
+      const baseSize = c.font_size;
+      document.body.style.fontSize = `${baseSize}px`;
+    }
+    
+    function mapToCapabilities(config) {
+      const c = { ...defaultConfig, ...config };
+      return {
+        recolorables: [
+          {
+            get: () => c.secondary_color,
+            set: (value) => {
+              c.secondary_color = value;
+              window.elementSdk.setConfig({ secondary_color: value });
+            }
+          },
+          {
+            get: () => c.surface_color,
+            set: (value) => {
+              c.surface_color = value;
+              window.elementSdk.setConfig({ surface_color: value });
+            }
+          },
+          {
+            get: () => c.text_color,
+            set: (value) => {
+              c.text_color = value;
+              window.elementSdk.setConfig({ text_color: value });
+            }
+          },
+          {
+            get: () => c.primary_color,
+            set: (value) => {
+              c.primary_color = value;
+              window.elementSdk.setConfig({ primary_color: value });
+            }
+          },
+          {
+            get: () => c.accent_color,
+            set: (value) => {
+              c.accent_color = value;
+              window.elementSdk.setConfig({ accent_color: value });
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => c.font_family,
+          set: (value) => {
+            c.font_family = value;
+            window.elementSdk.setConfig({ font_family: value });
+          }
+        },
+        fontSizeable: {
+          get: () => c.font_size,
+          set: (value) => {
+            c.font_size = value;
+            window.elementSdk.setConfig({ font_size: value });
+          }
+        }
+      };
+    }
+    
+    function mapToEditPanelValues(config) {
+      const c = { ...defaultConfig, ...config };
+      return new Map([
+        ["hero_name", c.hero_name],
+        ["hero_title", c.hero_title],
+        ["hero_tagline", c.hero_tagline],
+        ["about_text", c.about_text],
+        ["skill_1", c.skill_1],
+        ["skill_2", c.skill_2],
+        ["skill_3", c.skill_3],
+        ["skill_4", c.skill_4],
+        ["skill_5", c.skill_5],
+        ["contact_email", c.contact_email],
+        ["contact_phone", c.contact_phone],
+        ["contact_location", c.contact_location]
+      ]);
+    }
+    
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cdd3f0b17f7f91a',t:'MTc3MTA3OTI0Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>
+  // Project Data
+  const projects = [
+    {
+      title: "Automated Initial Whatsapp Sales",
+      description: "Designed and implemented the Chat Conversation System with a focus on user-friendliness and effectiveness. Built full CRUD functionality for managing chat leads, customer profiles, chat takeover and transfers including creation, editing, deletion, filtering, and search capabilities.",
+      thumbnail: "WEBDEV7.png",
+      images: ["WEBDEV1.png", "WEBDEV2.png", "WEBDEV3.png", "WEBDEV4.png", "WEBDEV5.png", "WEBDEV6.png", "WEBDEV7.png"] // Replace with actual image URLs
+    },
+    {
+      title: "Roblox Horror Experiences",
+      description: "These experiences blend psychological horror with innovative physics, tasking players with escaping a high-security facility while infected by the 'Bobospread' - a viral phenomenon that turns others into mindless entities while leaving the player as a unique, self-aware carrier. As a special' Bobo navigating eerie, liminal spaces like Room 56, the player must use custom sprint and dash mechanics to avoid containment and find an exit before their sanity fails. This biological dread is matched by a surreal journey through the Void, where survival depends on mastering a multidirectional gravity system that shifts your orientation based on the surface you touch. Whether you are clinging upside down to floating blocks or sprinting through red-lit corridors, the ultimate goal remains a desperate flight toward the center of the void to return to Earth, all while being hunted by an environment designed to keep you trapped.",
+      thumbnail: "ROBLOX10.png",
+      images: ["totalvoid.mp4", "welcometoyourhome.mp4", "ROBLOX1.png", "ROBLOX2.png", "ROBLOX3.png", "ROBLOX4.png", "ROBLOX6.png", "ROBLOX8.png", "ROBLOX9.png", "ROBLOX10.png", "ROBLOX11.png", "ROBLOX12.png", "ROBLOX13.png", "ROBLOX15.png"]
+    },
+    {
+      title: "Retro Platformer",
+      description: "I created a NYP Badminton CCA website serves as a digital hub for both current players and prospective student-athletes. Its design highlights the team’s organizational structure—introducing the 'Teachers-in-charge' and student leaders—alongside a dynamic 'History Gallery' that celebrates past victories and training sessions. By integrating an easy-to-use registration form and clear links to social media platforms, the site effectively fosters engagement and simplifies the recruitment process. The clean, purple-themed layout mirrors the energy of the court, making it an inviting space for anyone looking to join the NYP badminton family.",
+      thumbnail: "ROBLOX10.png",
+      images: ["UXwebsite.mp4"]
+    }
+  ];
+
+  let currentProjectIndex = 0;
+  let currentImageIndex = 0;
+
+  function showProject(index) {
+    currentProjectIndex = index;
+    currentImageIndex = 0;
+    const container = document.getElementById('screenshot-container');
+    const desc = document.getElementById('project-desc');
+    
+    container.innerHTML = projects[index].images.map(file => {
+      // Check if the filename ends with .mp4
+      if (file.toLowerCase().endsWith('.mp4')) {
+        return `
+          <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
+            <video src="${file}" class="max-w-full max-h-full object-contain" autoplay muted loop playsinline></video>
+          </div>`;
+      } else {
+        // Otherwise, treat it as a normal image
+        return `
+          <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
+            <img src="${file}" class="max-w-full max-h-full object-contain" alt="Screenshot">
+          </div>`;
+      }
+    }).join('');
+    
+    desc.textContent = projects[index].description;
+    document.getElementById('project-viewer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    updateScroll();
+  }
+
+  function scrollScreenshots(direction) {
+    const totalImages = projects[currentProjectIndex].images.length;
+    currentImageIndex = (currentImageIndex + direction + totalImages) % totalImages;
+    updateScroll();
+  }
+
+  function updateScroll() {
+    const container = document.getElementById('screenshot-container');
+    container.style.transform = `translateX(-${currentImageIndex * 100}%)`;
+  }
+</script>
+</body>
+</html>
