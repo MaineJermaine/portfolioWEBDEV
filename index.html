@@ -712,19 +712,23 @@ PROJECTS & ACHIEVEMENTS
   const projects = [
     {
       title: "Automated Initial Whatsapp Sales",
-      description: "Designed and implemented the Chat Conversation System with a focus on user-friendliness and effectiveness. Built full CRUD functionality for managing chat leads, customer profiles, chat takeover and transfers including creation, editing, deletion, filtering, and search capabilities.",
+      description: "Designed and implemented the Chat Conversation System with a focus on user-friendliness and effectiveness...",
       thumbnail: "WEBDEV7.png",
-      images: ["WEBDEV1.png", "WEBDEV2.png", "WEBDEV3.png", "WEBDEV4.png", "WEBDEV5.png", "WEBDEV6.png", "WEBDEV7.png"] // Replace with actual image URLs
+      images: ["WEBDEV1.png", "WEBDEV2.png", "WEBDEV3.png", "WEBDEV4.png", "WEBDEV5.png", "WEBDEV6.png", "WEBDEV7.png"]
     },
     {
       title: "Roblox Horror Experiences",
-      description: "These experiences blend psychological horror with innovative physics, tasking players with escaping a high-security facility while infected by the 'Bobospread' - a viral phenomenon that turns others into mindless entities while leaving the player as a unique, self-aware carrier. As a special' Bobo navigating eerie, liminal spaces like Room 56, the player must use custom sprint and dash mechanics to avoid containment and find an exit before their sanity fails. This biological dread is matched by a surreal journey through the Void, where survival depends on mastering a multidirectional gravity system that shifts your orientation based on the surface you touch. Whether you are clinging upside down to floating blocks or sprinting through red-lit corridors, the ultimate goal remains a desperate flight toward the center of the void to return to Earth, all while being hunted by an environment designed to keep you trapped.",
+      description: "These experiences blend psychological horror with innovative physics...",
       thumbnail: "ROBLOX10.png",
-      images: ["https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/totalvoid.mp4", "https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/welcometoyourhome.mp4", "ROBLOX1.png", "ROBLOX2.png", "ROBLOX3.png", "ROBLOX4.png", "ROBLOX6.png", "ROBLOX8.png", "ROBLOX9.png", "ROBLOX10.png", "ROBLOX11.png", "ROBLOX12.png", "ROBLOX13.png", "ROBLOX15.png"]
+      images: [
+        "https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/totalvoid.mp4", 
+        "https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/welcometoyourhome.mp4", 
+        "ROBLOX1.png", "ROBLOX2.png", "ROBLOX3.png", "ROBLOX4.png", "ROBLOX6.png", "ROBLOX8.png", "ROBLOX9.png", "ROBLOX10.png", "ROBLOX11.png", "ROBLOX12.png", "ROBLOX13.png", "ROBLOX15.png"
+      ]
     },
     {
       title: "Retro Platformer",
-      description: "I created a NYP Badminton CCA website serves as a digital hub for both current players and prospective student-athletes. Its design highlights the team’s organizational structure—introducing the 'Teachers-in-charge' and student leaders—alongside a dynamic 'History Gallery' that celebrates past victories and training sessions. By integrating an easy-to-use registration form and clear links to social media platforms, the site effectively fosters engagement and simplifies the recruitment process. The clean, purple-themed layout mirrors the energy of the court, making it an inviting space for anyone looking to join the NYP badminton family.",
+      description: "I created a NYP Badminton CCA website serves as a digital hub...",
       thumbnail: "ROBLOX10.png",
       images: ["https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/UXwebsite.mp4"]
     }
@@ -739,25 +743,28 @@ PROJECTS & ACHIEVEMENTS
     const container = document.getElementById('screenshot-container');
     const desc = document.getElementById('project-desc');
     
-    container.innerHTML = projects[index].images.map(file => {
-      // Check if the filename ends with .mp4
+    // Use 'idx' to create unique IDs for the loaders
+    container.innerHTML = projects[index].images.map((file, idx) => {
       if (file.toLowerCase().endsWith('.mp4')) {
-           return `
-             <div class="relative min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
-               <div id="loader-${currentImageIndex}" class="video-loader">
-                 <div class="spinner"></div>
-                 <p class="font-mono-code text-emerald-400 text-xs animate-pulse">LOADING_BUFFER_...</p>
-               </div>
-         
-               <video 
-                 src="${file}" 
-                 class="max-w-full max-h-full object-contain" 
-                 autoplay muted loop playsinline 
-                 oncanplay="document.getElementById('loader-${currentImageIndex}').style.display='none';"
-                 onwaiting="document.getElementById('loader-${currentImageIndex}').style.display='flex';">
-               </video>
-             </div>`;
-         }
+        return `
+          <div class="relative min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
+            <div id="loader-${idx}" class="video-loader">
+              <div class="spinner"></div>
+              <p class="font-mono-code text-emerald-400 text-xs animate-pulse">LOADING_BUFFER_...</p>
+            </div>
+            <video 
+              src="${file}" 
+              class="max-w-full max-h-full object-contain" 
+              autoplay muted loop playsinline 
+              oncanplay="document.getElementById('loader-${idx}').style.display='none';"
+              onwaiting="document.getElementById('loader-${idx}').style.display='flex';">
+            </video>
+          </div>`;
+      } else {
+        return `
+          <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
+            <img src="${file}" class="max-w-full max-h-full object-contain" alt="Screenshot">
+          </div>`;
       }
     }).join('');
     
@@ -779,6 +786,7 @@ PROJECTS & ACHIEVEMENTS
 </script>
 </body>
 </html>
+
 
 
 
