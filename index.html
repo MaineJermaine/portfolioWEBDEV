@@ -204,22 +204,47 @@
       100% { transform: rotate(360deg); }
     }
     
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+    
     .video-loader {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 50px;
-      height: 50px;
-      border: 4px solid rgba(0, 255, 136, 0.3);
-      border-top: 4px solid #00ff88;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
       z-index: 10;
     }
     
     .video-loader.hidden {
       display: none;
+    }
+    
+    .loader-spinner {
+      width: 60px;
+      height: 60px;
+      border: 3px solid rgba(0, 255, 136, 0.3);
+      border-top: 3px solid #00ff88;
+      border-right: 3px solid #00d4ff;
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+      box-shadow: 0 0 20px rgba(0, 255, 136, 0.4), inset 0 0 20px rgba(0, 212, 255, 0.1);
+    }
+    
+    .loader-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: #00ff88;
+      letter-spacing: 2px;
+      animation: pulse 1.5s ease-in-out infinite;
+      text-transform: uppercase;
+      font-weight: 600;
+      text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
     }
     
     .video-container {
@@ -668,7 +693,7 @@
       
       container.innerHTML = projects[index].images.map(file => {
         if (file.toLowerCase().endsWith('.mp4')) {
-          return `<div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950 video-container"><div class="video-loader"></div><video src="${file}" class="max-w-full max-h-full object-contain" autoplay muted loop playsinline></video></div>`;
+          return `<div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950 video-container"><div class="video-loader"><div class="loader-spinner"></div><div class="loader-text">loading...</div></div><video src="${file}" class="max-w-full max-h-full object-contain" autoplay muted loop playsinline></video></div>`;
         } else {
           return `<div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950"><img src="${file}" class="max-w-full max-h-full object-contain" alt="Screenshot"></div>`;
         }
