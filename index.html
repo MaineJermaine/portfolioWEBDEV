@@ -100,6 +100,31 @@
     .scroll-smooth {
       scroll-behavior: smooth;
     }
+   .video-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      items-center: center;
+      gap: 12px;
+      z-index: 10;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 255, 136, 0.1);
+      border-top: 3px solid #00ff88;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
   <style>body { box-sizing: border-box; }</style>
   <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
@@ -717,16 +742,22 @@ PROJECTS & ACHIEVEMENTS
     container.innerHTML = projects[index].images.map(file => {
       // Check if the filename ends with .mp4
       if (file.toLowerCase().endsWith('.mp4')) {
-        return `
-          <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
-            <video src="${file}" class="max-w-full max-h-full object-contain" autoplay muted loop playsinline></video>
-          </div>`;
-      } else {
-        // Otherwise, treat it as a normal image
-        return `
-          <div class="min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
-            <img src="${file}" class="max-w-full max-h-full object-contain" alt="Screenshot">
-          </div>`;
+           return `
+             <div class="relative min-w-full h-full flex items-center justify-center border-x border-slate-950 bg-slate-950">
+               <div id="loader-${currentImageIndex}" class="video-loader">
+                 <div class="spinner"></div>
+                 <p class="font-mono-code text-emerald-400 text-xs animate-pulse">LOADING_BUFFER_...</p>
+               </div>
+         
+               <video 
+                 src="${file}" 
+                 class="max-w-full max-h-full object-contain" 
+                 autoplay muted loop playsinline 
+                 oncanplay="document.getElementById('loader-${currentImageIndex}').style.display='none';"
+                 onwaiting="document.getElementById('loader-${currentImageIndex}').style.display='flex';">
+               </video>
+             </div>`;
+         }
       }
     }).join('');
     
@@ -748,6 +779,7 @@ PROJECTS & ACHIEVEMENTS
 </script>
 </body>
 </html>
+
 
 
 
