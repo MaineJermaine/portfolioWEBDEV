@@ -45,16 +45,6 @@
       51%, 100% { border-color: transparent; }
     }
     
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
-    
-    @keyframes pulse-glow {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
-    }
-    
     @keyframes particle-float-1 {
       0%, 100% { transform: translate(0, 0); }
       25% { transform: translate(30px, -40px); }
@@ -149,31 +139,6 @@
       cursor: pointer;
     }
     
-    .code-box:hover .code-content {
-      opacity: 0;
-      pointer-events: none;
-    }
-    
-    .code-box:hover .image-placeholder {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    
-    .code-content {
-      opacity: 1;
-      transition: opacity 0.3s ease;
-    }
-    
-    .image-placeholder {
-      opacity: 0;
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.3s ease;
-    }
-    
     .typing-effect {
       overflow: hidden;
       white-space: nowrap;
@@ -253,7 +218,6 @@
         </pattern>
       </defs>
       <rect width="100%" height="100%" fill="url(#stars)"/>
-      <!-- Animated connecting lines -->
       <line x1="5%" y1="10%" x2="15%" y2="20%" style="stroke-dasharray: 200; animation: line-draw 6s ease-in-out infinite;"/>
       <line x1="15%" y1="20%" x2="25%" y2="15%" style="stroke-dasharray: 150; animation: line-draw 7s ease-in-out infinite 1s;"/>
       <line x1="80%" y1="30%" x2="90%" y2="45%" style="stroke-dasharray: 200; animation: line-draw 8s ease-in-out infinite 0.5s;"/>
@@ -274,30 +238,28 @@
     <div class="particle particle-3" style="top: 50%; right: 10%; animation-delay: 0.5s;"></div>
     <div class="particle particle-2" style="bottom: 30%; right: 25%; animation-delay: 1.5s;"></div>
     <div class="particle particle-1" style="top: 30%; left: 40%; animation-delay: 0.8s;"></div>
-   </div><!-- Navigation -->
+   </div>
+   <!-- Navigation -->
    <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-emerald-500/20">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
      <div class="flex items-center gap-2">
-      <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-lg flex items-center justify-center"><span class="text-slate-950 font-bold font-mono-code text-sm">&lt;/&gt;</span>
-      </div><span class="font-display font-semibold text-lg">Azri</span>
+      <div class="w-8 h-8 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-lg flex items-center justify-center"><span class="text-slate-950 font-bold font-mono-code text-sm">&lt;/&gt;</span></div>
+      <span class="font-display font-semibold text-lg">Azri</span>
      </div>
-     <div class="hidden md:flex items-center gap-8 font-mono-code text-sm"><a href="#about" class="text-gray-400 hover:text-emerald-400 transition-colors">about()</a> <a href="#experience" class="text-gray-400 hover:text-emerald-400 transition-colors">experience()</a> <a href="#skills" class="text-gray-400 hover:text-emerald-400 transition-colors">skills()</a> <a href="#contact" class="text-gray-400 hover:text-emerald-400 transition-colors">contact()</a>
-     </div><a href="https://docs.google.com/document/d/1-dm8XxaslDXrLmOVOYcrWfYBzEi-FaGbIX1IaIVKR2o/export?format=pdf" target="_blank" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-lg transition-all font-mono-code text-sm inline-block"> download.resume() </a>
+     <div class="hidden md:flex items-center gap-8 font-mono-code text-sm"><a href="#about" class="text-gray-400 hover:text-emerald-400 transition-colors">about()</a> <a href="#experience" class="text-gray-400 hover:text-emerald-400 transition-colors">experience()</a> <a href="#projects" class="text-gray-400 hover:text-emerald-400 transition-colors">projects()</a> <a href="#skills" class="text-gray-400 hover:text-emerald-400 transition-colors">skills()</a> <a href="#contact" class="text-gray-400 hover:text-emerald-400 transition-colors">contact()</a></div>
+     <a href="https://docs.google.com/document/d/1-dm8XxaslDXrLmOVOYcrWfYBzEi-FaGbIX1IaIVKR2o/export?format=pdf" target="_blank" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-lg transition-all font-mono-code text-sm inline-block">download.resume()</a>
     </div>
-   </nav><!-- Hero Section -->
+   </nav>
+   <!-- Hero Section -->
    <section class="relative min-h-screen flex items-center justify-center grid-bg pt-20">
     <div class="max-w-6xl mx-auto px-6 py-20 flex flex-col lg:flex-row items-center gap-12">
      <div class="flex-1 text-center lg:text-left">
-      <div class="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full mb-6"><span class="font-mono-code text-emerald-400 text-sm">🎓 Nanyang Polytechnic | Diploma in IT</span>
-      </div>
+      <div class="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-full mb-6"><span class="font-mono-code text-emerald-400 text-sm">🎓 Nanyang Polytechnic | Diploma in IT</span></div>
       <h1 id="hero-name" class="font-display text-5xl md:text-7xl font-bold mb-4 gradient-text">Azri Bin Aidir</h1>
       <h2 id="hero-title" class="font-display text-2xl md:text-3xl text-gray-300 mb-2">Game Developer &amp; Coder</h2>
       <p class="text-emerald-400 font-mono-code mb-6">17 years old | Singapore</p>
       <p id="hero-tagline" class="font-mono-code text-emerald-400 text-lg mb-8 typing-effect inline-block">Creating immersive games and web experiences_</p>
-      <div class="flex flex-wrap gap-4 justify-center lg:justify-start"><a href="https://docs.google.com/document/d/1-dm8XxaslDXrLmOVOYcrWfYBzEi-FaGbIX1IaIVKR2o/export?format=pdf" target="_blank" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all font-display text-lg flex items-center gap-3 card-hover">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg> Download Resume </a> <a href="#contact" class="px-8 py-4 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 font-bold rounded-xl transition-all font-display text-lg"> Get In Touch </a>
-      </div>
+      <div class="flex flex-wrap gap-4 justify-center lg:justify-start"><a href="https://docs.google.com/document/d/1-dm8XxaslDXrLmOVOYcrWfYBzEi-FaGbIX1IaIVKR2o/export?format=pdf" target="_blank" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all font-display text-lg flex items-center gap-3 card-hover"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg> Download Resume</a> <a href="#contact" class="px-8 py-4 border-2 border-emerald-500 text-emerald-400 hover:bg-emerald-500/10 font-bold rounded-xl transition-all font-display text-lg">Get In Touch</a></div>
      </div>
      <div class="flex-1 flex justify-center">
       <div class="relative animate-float">
@@ -310,15 +272,16 @@
         <span class="pl-4">focus: <span class="text-cyan-400">"roblox"</span></span><br>
         };
        </div>
+      </div>
      </div>
-     </div>
-    </div><!-- Scroll Indicator -->
+    </div>
     <div class="absolute bottom-8 left-1/2 -translate-x-1/2">
      <div class="w-6 h-10 border-2 border-emerald-500/50 rounded-full flex justify-center">
       <div class="w-1 h-3 bg-emerald-400 rounded-full mt-2 animate-bounce"></div>
      </div>
     </div>
-   </section><!-- About Section -->
+   </section>
+   <!-- About Section -->
    <section id="about" class="py-24 relative scroll-animate">
     <div class="max-w-6xl mx-auto px-6">
      <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">01.</span>
@@ -331,46 +294,34 @@
        <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6">
         <h3 class="font-mono-code text-emerald-400 mb-4">// Key Info</h3>
         <div class="space-y-3">
-         <div class="flex justify-between"><span class="text-gray-400">Age:</span> <span class="text-emerald-400">17 years old</span>
-         </div>
-         <div class="flex justify-between"><span class="text-gray-400">Location:</span> <span class="text-emerald-400">Singapore</span>
-         </div>
-         <div class="flex justify-between"><span class="text-gray-400">Education:</span> <span class="text-emerald-400">Nanyang Polytechnic</span>
-         </div>
-         <div class="flex justify-between"><span class="text-gray-400">Specialization:</span> <span class="text-emerald-400">Game Development</span>
-         </div>
+         <div class="flex justify-between"><span class="text-gray-400">Age:</span> <span class="text-emerald-400">17 years old</span></div>
+         <div class="flex justify-between"><span class="text-gray-400">Location:</span> <span class="text-emerald-400">Singapore</span></div>
+         <div class="flex justify-between"><span class="text-gray-400">Education:</span> <span class="text-emerald-400">Nanyang Polytechnic</span></div>
+         <div class="flex justify-between"><span class="text-gray-400">Specialization:</span> <span class="text-emerald-400">Game Development</span></div>
         </div>
        </div>
       </div>
       <div class="grid grid-cols-2 gap-4">
        <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
-        <div class="text-4xl mb-3">
-         🎓
-        </div>
+        <div class="text-4xl mb-3">🎓</div>
         <h4 class="font-display font-semibold text-lg mb-2">Education</h4>
         <p class="text-gray-400 text-sm">Diploma in IT</p>
         <p class="text-gray-500 text-xs mt-2">Nanyang Polytechnic</p>
        </div>
        <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover">
-        <div class="text-4xl mb-3">
-         🎮
-        </div>
+        <div class="text-4xl mb-3">🎮</div>
         <h4 class="font-display font-semibold text-lg mb-2">Games</h4>
         <p class="text-gray-400 text-sm">Roblox Studio</p>
         <p class="text-gray-500 text-xs mt-2">Hopscotch</p>
        </div>
        <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover">
-        <div class="text-4xl mb-3">
-         💻
-        </div>
+        <div class="text-4xl mb-3">💻</div>
         <h4 class="font-display font-semibold text-lg mb-2">Languages</h4>
         <p class="text-gray-400 text-sm">5+ Languages</p>
         <p class="text-gray-500 text-xs mt-2">Luau, JavaScript &amp; More</p>
        </div>
        <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 card-hover">
-        <div class="text-4xl mb-3">
-         🌟
-        </div>
+        <div class="text-4xl mb-3">🌟</div>
         <h4 class="font-display font-semibold text-lg mb-2">Passion</h4>
         <p class="text-gray-400 text-sm">Game &amp; Web Dev</p>
         <p class="text-gray-500 text-xs mt-2">Always Learning</p>
@@ -378,11 +329,12 @@
       </div>
      </div>
     </div>
-   </section><!-- Featured Projects Section -->
+   </section>
+   <!-- Featured Projects Section -->
    <section id="projects" class="py-24 relative overflow-hidden scroll-animate">
     <div class="max-w-6xl mx-auto px-6">
       <div class="flex items-center gap-4 mb-12">
-        <span class="font-mono-code text-emerald-400 text-xl">02.</span>
+        <span class="font-mono-code text-emerald-400 text-xl">02.5</span>
         <h2 class="font-display text-4xl font-bold">Featured Projects</h2>
         <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
       </div>
@@ -393,7 +345,7 @@
             <img src="WEBDEV2.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Thumbnail">
           </div>
           <h3 class="font-display font-bold text-xl text-emerald-400 mb-2">Automated Initial WhatsApp Sales</h3>
-          <p class="text-gray-400 text-sm">Designed and implemented the Chat Conversation System with a focus on user-friendliness and effectiveness. Built full CRUD functionality for managing chat leads, customer profiles, chat takeover and transfers including creation, editing, deletion, filtering, and search capabilities.</p>
+          <p class="text-gray-400 text-sm">Designed and implemented the Chat Conversation System with a focus on user-friendliness.</p>
         </button>
 
         <button onclick="showProject(1)" class="group bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-4 text-left card-hover focus:outline-none focus:ring-2 focus:ring-emerald-400">
@@ -401,7 +353,7 @@
             <img src="ROBLOX16.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Thumbnail">
           </div>
           <h3 class="font-display font-bold text-xl text-emerald-400 mb-2">Roblox Horror Experiences</h3>
-          <p class="text-gray-400 text-sm">These experiences blend psychological horror with innovative physics, tasking players with escaping a high-security facility while infected by the 'Bobospread' - a viral phenomenon that turns others into mindless entities while leaving the player as a unique, self-aware carrier. As a special Bobo navigating eerie, liminal spaces like Room 56, the player must use custom sprint and dash mechanics to avoid containment and find an exit before their sanity fails.</p>
+          <p class="text-gray-400 text-sm">Psychological horror blended with innovative physics and custom mechanics.</p>
         </button>
 
         <button onclick="showProject(2)" class="group bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-4 text-left card-hover focus:outline-none focus:ring-2 focus:ring-emerald-400">
@@ -409,7 +361,7 @@
             <img src="UXWEBSITE1.png" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Thumbnail">
           </div>
           <h3 class="font-display font-bold text-xl text-emerald-400 mb-2">UX CCA Website Demo</h3>
-          <p class="text-gray-400 text-sm">A vibrant and user-friendly web portal designed to showcase the spirit, history, and community of the Nanyang Polytechnic Badminton CCA. It features a comprehensive overview of the team, past achievements, and an interactive sign-up process for aspiring members.</p>
+          <p class="text-gray-400 text-sm">A vibrant web portal for the Nanyang Polytechnic Badminton CCA community.</p>
         </button>
       </div>
 
@@ -432,7 +384,8 @@
           <p id="project-desc" class="text-gray-400 font-mono-code text-sm uppercase tracking-widest">No project selected</p>
       </div>
     </div>
-   </section><!-- Featured Project Links Section -->
+   </section>
+   <!-- Featured Project Links Section -->
    <section id="project-links" class="max-w-6xl mx-auto px-6 py-12 scroll-animate">
     <h2 class="font-display text-3xl font-bold text-emerald-400 mb-6">Explore Featured Projects</h2>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -446,17 +399,18 @@
       </a>
       <a href="https://www.roblox.com/games/14587169869" target="_blank" class="block bg-slate-800/50 border border-emerald-500/20 rounded-xl p-6 hover:bg-slate-800 hover:border-emerald-400 transition-all">
         <h3 class="font-display text-xl font-semibold text-emerald-400 mb-2">Welcome to Your Home</h3>
-        <p class="text-gray-400 text-sm">This is your home, the place between reality and fiction where nothing exists except your mind's imagination. Can you survive the monsters you made on your own?</p>
+        <p class="text-gray-400 text-sm">This is your home, the place between reality and fiction where nothing exists except your mind's imagination. Can you survive the monsters you made in your own mind?</p>
       </a>
     </div>
-   </section><!-- Experience Section -->
+   </section>
+   <!-- Experience Section -->
    <section id="experience" class="py-24 bg-slate-900/30 scroll-animate">
     <div class="max-w-6xl mx-auto px-6">
-     <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">02.5</span>
+     <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">02.</span>
       <h2 class="font-display text-4xl font-bold">Experience</h2>
       <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
      </div>
-     <div class="space-y-8"><!-- Experience Item 1 -->
+     <div class="space-y-8">
       <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-8 card-hover">
        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
         <div>
@@ -469,7 +423,7 @@
         <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Created gameplay mechanics, UI systems, and player interactions</li>
         <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Gained experience in game design principles and user engagement</li>
        </ul>
-      </div><!-- Experience Item 2 -->
+      </div>
       <div class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-8 card-hover">
        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
         <div>
@@ -482,7 +436,7 @@
         <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Learned game development fundamentals and visual programming</li>
         <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Experimented with creative ideas and game mechanics</li>
        </ul>
-      </div><!-- Experience Item 3 -->
+      </div>
       <div class="bg-slate-950/50 border border-emerald-500/20 rounded-2xl p-8 card-hover">
        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
         <div>
@@ -495,7 +449,7 @@
         <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Mastering multiple programming languages and frameworks</li>
         <li class="flex items-start gap-2"><span class="text-emerald-400 mt-1">▹</span> Building foundational knowledge for future IT career</li>
        </ul>
-      </div><!-- Experience Item 4 -->
+      </div>
       <div class="bg-slate-950/50 border border-cyan-500/20 rounded-2xl p-8 card-hover">
        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
         <div>
@@ -505,9 +459,9 @@
         </div><span class="font-mono-code text-gray-500 text-sm">Completed</span>
        </div>
        <ul class="space-y-2 text-gray-400 mb-6">
-        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Built a fully functional Discord bot with blacklist filtering to automatically detect and delete messages containing restricted words</li>
-        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Implemented server administration features including user kick and ban commands with proper authorization</li>
-        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Developed member verification system with automated greeting messages and humanity verification for new users</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Built a fully functional Discord bot with blacklist filtering</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Implemented server administration features including user kick and ban commands</li>
+        <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Developed member verification system with automated greeting messages</li>
         <li class="flex items-start gap-2"><span class="text-cyan-400 mt-1">▹</span> Deployed bot to run 24/7 with stable and reliable uptime</li>
        </ul>
        <div class="bg-slate-800/50 border border-cyan-500/20 rounded-xl p-8 flex items-center justify-center min-h-64">
@@ -516,38 +470,39 @@
       </div>
      </div>
     </div>
-   </section><!-- Skills Section -->
+   </section>
+   <!-- Skills Section -->
    <section id="skills" class="py-24 scroll-animate">
     <div class="max-w-6xl mx-auto px-6">
      <div class="flex items-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">03.</span>
       <h2 class="font-display text-4xl font-bold">Programming Languages &amp; Skills</h2>
       <div class="flex-1 h-px bg-gradient-to-r from-emerald-500/50 to-transparent"></div>
      </div>
-     <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6"><!-- Luau -->
+     <div class="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
       <div class="bg-slate-950/50 border border-emerald-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
        <div class="text-5xl mb-4">🌙</div>
        <h3 class="font-display font-semibold text-lg mb-2" id="skill-1">Luau</h3>
        <p class="text-gray-400 text-sm">Game scripting for Roblox</p>
        <div class="mt-4 w-full bg-slate-900 rounded-full h-2"><div class="bg-emerald-500 h-2 rounded-full" style="width: 85%;"></div></div>
-      </div><!-- JavaScript -->
+      </div>
       <div class="bg-slate-950/50 border border-cyan-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
        <div class="text-5xl mb-4">⚡</div>
        <h3 class="font-display font-semibold text-lg mb-2" id="skill-2">JavaScript</h3>
        <p class="text-gray-400 text-sm">Web interactivity &amp; development</p>
        <div class="mt-4 w-full bg-slate-900 rounded-full h-2"><div class="bg-cyan-400 h-2 rounded-full" style="width: 80%;"></div></div>
-      </div><!-- Python -->
+      </div>
       <div class="bg-slate-950/50 border border-emerald-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
        <div class="text-5xl mb-4">🐍</div>
        <h3 class="font-display font-semibold text-lg mb-2" id="skill-3">Python</h3>
        <p class="text-gray-400 text-sm">Scripting &amp; automation</p>
        <div class="mt-4 w-full bg-slate-900 rounded-full h-2"><div class="bg-emerald-500 h-2 rounded-full" style="width: 75%;"></div></div>
-      </div><!-- HTML & CSS -->
+      </div>
       <div class="bg-slate-950/50 border border-cyan-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
        <div class="text-5xl mb-4">🎨</div>
        <h3 class="font-display font-semibold text-lg mb-2" id="skill-4">HTML &amp; CSS</h3>
        <p class="text-gray-400 text-sm">Web design &amp; structure</p>
        <div class="mt-4 w-full bg-slate-900 rounded-full h-2"><div class="bg-cyan-400 h-2 rounded-full" style="width: 90%;"></div></div>
-      </div><!-- Game Dev -->
+      </div>
       <div class="bg-slate-950/50 border border-emerald-500/30 rounded-2xl p-6 card-hover flex flex-col items-center text-center">
        <div class="text-5xl mb-4">🎮</div>
        <h3 class="font-display font-semibold text-lg mb-2" id="skill-5">Game Development</h3>
@@ -556,7 +511,8 @@
       </div>
      </div>
     </div>
-   </section><!-- Certifications Section -->
+   </section>
+   <!-- Certifications Section -->
     <section id="certificates" class="py-24 relative overflow-hidden scroll-animate">
     <div class="max-w-6xl mx-auto px-6">
       <div class="flex items-center gap-4 mb-12">
@@ -564,28 +520,23 @@
         <h2 class="font-display text-4xl font-bold">Certifications</h2>
         <div class="flex-1 h-px bg-gradient-to-r from-cyan-500/50 to-transparent"></div>
       </div>
+
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover group">
           <div class="w-12 h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-6 border border-cyan-500/30">
             <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           </div>
           <h3 class="font-display font-bold text-xl mb-2 text-white">User Experience Design Fundamentals</h3>
-          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by : IBM SKILLSBUILD</p>
-          <div class="flex items-center justify-between mt-auto">
-            <span class="text-xs font-mono-code text-cyan-400/60">REF: IT-2025-001</span>
-            <a href="https://students.yourlearning.ibm.com/credential/CREDLY-ae2e453d-5311-41a0-be95-b217e0c4670f" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">View Credentials <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-          </div>
+          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by: IBM SKILLSBUILD</p>
+          <a href="https://students.yourlearning.ibm.com/credential/CREDLY-ae2e453d-5311-41a0-be95-b217e0c4670f" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">View Credentials →</a>
         </div>
         <div class="bg-slate-900/50 border border-emerald-500/20 rounded-2xl p-6 card-hover group">
           <div class="w-12 h-12 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-6 border border-emerald-500/30">
             <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
           </div>
           <h3 class="font-display font-bold text-xl mb-2 text-white">Web Development Fundamentals</h3>
-          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by : IBM SKILLSBUILD</p>
-          <div class="flex items-center justify-between mt-auto">
-            <span class="text-xs font-mono-code text-emerald-400/60">REF: CS-6621-NYP</span>
-            <a href="https://students.yourlearning.ibm.com/credential/CREDLY-ce744ad1-ca21-498e-a9ea-8c01f792977d" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">View Credentials <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-          </div>
+          <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by: IBM SKILLSBUILD</p>
+          <a href="https://students.yourlearning.ibm.com/credential/CREDLY-ce744ad1-ca21-498e-a9ea-8c01f792977d" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">View Credentials →</a>
         </div>
         <div class="bg-slate-900/50 border border-cyan-500/20 rounded-2xl p-6 card-hover group">
           <div class="w-12 h-12 bg-cyan-500/10 rounded-lg flex items-center justify-center mb-6 border border-cyan-500/30">
@@ -593,14 +544,12 @@
           </div>
           <h3 class="font-display font-bold text-xl mb-2 text-white">AI Fluency: Framework & Foundations</h3>
           <p class="text-gray-400 text-sm mb-4 font-mono-code">Issued by: Anthropic Academy</p>
-          <div class="flex items-center justify-between mt-auto">
-            <span class="text-xs font-mono-code text-cyan-400/60">REF: WD-FCC-9920</span>
-            <a href="https://verify.skilljar.com/c/rxpqzmx7xag4" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">View Credentials <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-          </div>
+          <a href="https://verify.skilljar.com/c/rxpqzmx7xag4" class="text-emerald-400 hover:text-white text-sm font-semibold transition-colors flex items-center gap-1">View Credentials →</a>
         </div>
       </div>
     </div>
-  </section><!-- Contact Section -->
+  </section>
+   <!-- Contact Section -->
    <section id="contact" class="py-24 bg-slate-900/30 scroll-animate">
     <div class="max-w-4xl mx-auto px-6 text-center">
      <div class="flex items-center justify-center gap-4 mb-12"><span class="font-mono-code text-emerald-400 text-xl">04.</span>
@@ -639,7 +588,8 @@
         <p id="contact-location" class="text-emerald-400 font-mono-code text-sm">Singapore</p>
       </div>
     </div>
-   </section><!-- Footer -->
+   </section>
+   <!-- Footer -->
    <footer class="py-8 border-t border-emerald-500/20">
     <div class="max-w-6xl mx-auto px-6 text-center">
      <p class="font-mono-code text-gray-500 text-sm">&lt;/&gt; Built by Azri Bin Aidir | © 2024</p>
@@ -656,12 +606,12 @@
       },
       {
         title: "Roblox Horror Experiences",
-        description: "These experiences blend psychological horror with innovative physics, tasking players with escaping a high-security facility while infected by the 'Bobospread'. Navigate eerie, liminal spaces like Room 56, using custom sprint and dash mechanics to avoid containment. The Void offers a multidirectional gravity system where survival depends on mastering your orientation based on what surface you touch.",
+        description: "These experiences blend psychological horror with innovative physics. Navigate eerie liminal spaces like Room 56 using custom sprint and dash mechanics. The Void offers a multidirectional gravity system where survival depends on mastering your orientation based on what surface you touch.",
         images: ["totalvoid.mp4", "welcometoyourhome.mp4", "ROBLOX1.png", "ROBLOX2.png", "ROBLOX3.png", "ROBLOX4.png", "ROBLOX6.png", "ROBLOX8.png", "ROBLOX9.png", "ROBLOX10.png"]
       },
       {
         title: "Retro Platformer",
-        description: "NYP Badminton CCA website serves as a digital hub for both current players and prospective student-athletes. It highlights the team's organizational structure, introduces Teachers-in-charge and student leaders, and features a dynamic History Gallery celebrating past victories and training sessions.",
+        description: "NYP Badminton CCA website serves as a digital hub for players and student-athletes. It highlights the organizational structure, introduces Teachers-in-charge and student leaders, and features a History Gallery celebrating past victories and training sessions.",
         images: ["UXwebsite.mp4"]
       }
     ];
@@ -684,7 +634,6 @@
       }).join('');
       
       desc.textContent = projects[index].description;
-      document.getElementById('project-viewer').scrollIntoView({ behavior: 'smooth', block: 'center' });
       updateScroll();
     }
 
@@ -793,7 +742,15 @@
     }
   </script>
   <script>
+    // Prevent automatic scroll restoration
+    if (history.scrollRestoration) {
+      history.scrollRestoration = 'manual';
+    }
+    
     document.addEventListener('DOMContentLoaded', () => {
+      // Scroll to top on page load
+      window.scrollTo(0, 0);
+      
       const progressBar = document.createElement('div');
       progressBar.id = 'progress-bar';
       document.body.appendChild(progressBar);
