@@ -114,11 +114,32 @@
       border-bottom: 1px solid var(--line);
       overflow: hidden;
     }
-    #field { position: absolute; inset: 0; width: 100%; height: 100%; }
     .hero::before {
       content: ''; position: absolute; inset: 0; pointer-events: none;
-      background: radial-gradient(ellipse at 30% 60%, transparent 0%, var(--bg) 80%);
+      background:
+        linear-gradient(90deg, rgba(13, 13, 11, 0.8) 0%, rgba(13, 13, 11, 0.4) 42%, rgba(13, 13, 11, 0) 72%),
+        linear-gradient(0deg, rgba(13, 13, 11, 0.85) 0%, rgba(13, 13, 11, 0) 38%);
     }
+
+    /* ---------- 3D universe background ---------- */
+    .universe {
+      position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100lvh;
+      z-index: 0; pointer-events: none; overflow: hidden;
+      background: var(--bg);
+    }
+    .universe::before {          /* tiny blurred preview, shown while the real image loads */
+      content: ''; position: absolute; inset: -40px;
+      background: var(--bg) url("assets/bg/universe-tiny.webp") center / 300% 100% no-repeat;
+      filter: blur(24px); opacity: .7;
+    }
+    .universe canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.4s ease; }
+    .universe.ready canvas { opacity: 1; }
+    .universe.flat::before { inset: 0; filter: none; opacity: 1; background-image: url("assets/bg/universe-2k.webp"); background-size: cover; }
+    .universe-scrim {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: var(--bg); opacity: var(--scrim, 0);
+    }
+    main { position: relative; z-index: 1; }
     .hero-body {
       position: relative; z-index: 2; flex: 1;
       display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: end;
@@ -397,6 +418,7 @@
         flex-direction: column; gap: 0; background: var(--bg); border-bottom: 1px solid var(--line-strong);
       }
       .nav.open { display: flex; }
+      .hero::before { background: linear-gradient(180deg, rgba(13, 13, 11, 0.45) 0%, rgba(13, 13, 11, 0.72) 45%, rgba(13, 13, 11, 0.85) 100%); }
       .nav a { padding: 16px var(--gutter); border-top: 1px solid var(--line); }
       .menu-btn { display: block; }
       .clock { display: none; }
@@ -426,6 +448,8 @@
 </head>
 <body>
   <div class="progress" id="progress"></div>
+  <div class="universe" id="universe" aria-hidden="true"><canvas></canvas></div>
+  <div class="universe-scrim" id="scrim" aria-hidden="true"></div>
 
   <!-- Top bar -->
   <header class="topbar">
@@ -455,7 +479,6 @@
   <main id="top">
     <!-- Hero -->
     <section class="hero">
-      <canvas id="field" aria-hidden="true"></canvas>
       <div class="wrap hero-body">
         <div>
           <div class="hero-meta mono"><span class="dot"></span>Portfolio // Singapore</div>
@@ -1095,64 +1118,188 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       });
     });
 
-    // ---------- Hero dot-matrix field ----------
+    // ---------- 3D universe background ----------
+    // A 360° panorama rendered in Blender (blender/universe.py), wrapped around the
+    // viewer by one small fragment shader: fisheye lens, slow drift, scroll + mouse
+    // steering, and an "energy" pulse over the bright parts. No 3D library needed.
     (function () {
-      const canvas = document.getElementById('field');
-      const ctx = canvas.getContext('2d');
-      const hero = canvas.parentElement;
+      const wrap = document.getElementById('universe');
+      const canvas = wrap.querySelector('canvas');
+      const scrim = document.getElementById('scrim');
+      const hero = document.querySelector('.hero');
       const readout = document.getElementById('readout');
-      const GAP = 22;
-      let w, h, dpr, dots = [], mouse = { x: -9999, y: -9999 }, running = true, t = 0;
+      const root = document.documentElement;
 
+      // Fade the background behind content once you scroll past the hero.
+      function updateScrim() {
+        const k = Math.min(1, Math.max(0, scrollY / (hero.offsetHeight * 0.75)));
+        scrim.style.setProperty('--scrim', (k * 0.74).toFixed(3));
+      }
+      addEventListener('scroll', updateScrim, { passive: true });
+      updateScrim();
+
+      const gl = canvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
+      if (!gl) { wrap.classList.add('flat'); return; }
+
+      const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }';
+      const FRAG = `
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        precision highp float;
+        #else
+        precision mediump float;
+        #endif
+        uniform sampler2D uTex;
+        uniform vec2 uRes;
+        uniform float uTime, uYaw, uPitch, uFov, uFx;
+
+        // fisheye ray for screen direction n at angle th from the centre -> panorama uv
+        vec2 rayUv(vec2 n, float th) {
+          vec3 d = vec3(n * sin(th), cos(th));
+          float cp = cos(uPitch), sp = sin(uPitch);
+          d = vec3(d.x, d.y * cp + d.z * sp, d.z * cp - d.y * sp);
+          float cy = cos(uYaw), sy = sin(uYaw);
+          d = vec3(d.x * cy + d.z * sy, d.y, d.z * cy - d.x * sy);
+          return vec2(atan(d.x, d.z) * 0.1591549 + 0.5, asin(clamp(d.y, -1.0, 1.0)) * 0.3183099 + 0.5);
+        }
+
+        void main() {
+          vec2 p = (gl_FragCoord.xy * 2.0 - uRes) / uRes.y;
+          float r = length(p) / (length(uRes) / uRes.y);   // 0 centre .. 1 corner
+          vec2 n = r > 1e-4 ? p / length(p) : vec2(0.0);
+          float th = r * uFov * 0.5;                        // equidistant fisheye
+
+          // lens: slight colour fringing toward the edges
+          float ca = 0.007 * r * r;
+          vec3 col = vec3(
+            texture2D(uTex, rayUv(n, th * (1.0 + ca))).r,
+            texture2D(uTex, rayUv(n, th)).g,
+            texture2D(uTex, rayUv(n, th * (1.0 - ca))).b);
+
+          // energy: a slow wave of current through the bright (neon) parts, plus a faint hum
+          vec2 uv = rayUv(n, th);
+          float lum = dot(col, vec3(0.299, 0.587, 0.114));
+          float glow = smoothstep(0.22, 0.8, lum);
+          float wave = pow(0.5 + 0.5 * sin(uv.x * 37.699 - uTime * 0.8 + uv.y * 9.0), 8.0);
+          float surge = pow(max(0.0, sin(uTime * 0.45)), 30.0);
+          float hum = 1.0 + 0.04 * sin(uTime * 17.0) * sin(uTime * 5.3);
+          col *= mix(1.0, hum, glow * uFx);
+          col += col * glow * (wave * 0.55 + surge * 0.5) * uFx;
+
+          col *= 1.0 - 0.7 * smoothstep(0.5, 1.05, r);       // lens vignette
+          gl_FragColor = vec4(col, 1.0);
+        }`;
+
+      function shader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src); gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+        return s;
+      }
+      let prog;
+      try {
+        prog = gl.createProgram();
+        gl.attachShader(prog, shader(gl.VERTEX_SHADER, VERT));
+        gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FRAG));
+        gl.linkProgram(prog);
+        if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+      } catch (err) { console.warn('universe:', err); wrap.classList.add('flat'); return; }
+      gl.useProgram(prog);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'p');
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      const U = {};
+      ['uTex', 'uRes', 'uTime', 'uYaw', 'uPitch', 'uFov', 'uFx'].forEach(k => U[k] = gl.getUniformLocation(prog, k));
+
+      const tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);         // longitude wraps seamlessly
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+      gl.uniform1i(U.uTex, 0);
+
+      // Resolution: render at most ~2.3 MP; the image is soft, nobody needs retina here.
+      let W = 0, H = 0;
       function resize() {
-        dpr = Math.min(devicePixelRatio || 1, 2);
-        w = hero.clientWidth; h = hero.clientHeight;
-        canvas.width = w * dpr; canvas.height = h * dpr;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        dots = [];
-        for (let y = GAP / 2; y < h; y += GAP) for (let x = GAP / 2; x < w; x += GAP) dots.push(x, y);
-        if (reduceMotion) draw();
+        const cw = wrap.clientWidth, ch = wrap.clientHeight;
+        const scale = Math.min(devicePixelRatio || 1, Math.sqrt(2.3e6 / (cw * ch)));
+        W = Math.round(cw * scale); H = Math.round(ch * scale);
+        canvas.width = W; canvas.height = H;
+        gl.viewport(0, 0, W, H);
+        gl.uniform2f(U.uRes, W, H);
+        // wider lens on landscape screens, tighter on tall phones
+        gl.uniform1f(U.uFov, (W > H ? 150 : 128) * Math.PI / 180);
+        if (reduceMotion && ready) draw(performance.now());
       }
 
-      function draw() {
-        ctx.clearRect(0, 0, w, h);
-        for (let k = 0; k < dots.length; k += 2) {
-          const x = dots[k], y = dots[k + 1];
-          const dx = x - mouse.x, dy = y - mouse.y;
-          const f = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy) / 180);
-          const wave = (Math.sin(x * 0.012 + t) + Math.cos(y * 0.016 - t * 0.8)) * 0.5;
-          const s = 1.2 + f * 3.2 + Math.max(0, wave) * 0.6;
-          ctx.fillStyle = f > 0.35
-            ? `rgba(255, 91, 31, ${0.35 + f * 0.65})`
-            : `rgba(235, 231, 221, ${0.1 + Math.max(0, wave) * 0.12 + f * 0.4})`;
-          ctx.fillRect(x - s / 2 - dx * f * 0.12, y - s / 2 - dy * f * 0.12, s, s);
+      // Steering: slow drift + scroll turns the world + mouse looks around a little.
+      const look = { x: 0, y: 0 }, cur = { yaw: 0, pitch: 0.05 };
+      addEventListener('pointermove', e => {
+        look.x = e.clientX / innerWidth * 2 - 1;
+        look.y = e.clientY / innerHeight * 2 - 1;
+      }, { passive: true });
+
+      const deg = v => ((v * 180 / Math.PI) % 360 + 360) % 360;
+      let ready = false, t0 = performance.now(), lastReadout = 0;
+      function draw(now) {
+        const t = reduceMotion ? 0 : (now - t0) / 1000;
+        const max = Math.max(1, root.scrollHeight - innerHeight);
+        const s = scrollY / max;
+        const yaw = t * 0.02 + s * 2.4 + (reduceMotion ? 0 : look.x * 0.14);
+        const pitch = 0.05 + s * 0.16 - (reduceMotion ? 0 : look.y * 0.07);
+        const ease = reduceMotion ? 1 : 0.05;
+        cur.yaw += (yaw - cur.yaw) * ease;
+        cur.pitch += (pitch - cur.pitch) * ease;
+        gl.uniform1f(U.uTime, t);
+        gl.uniform1f(U.uYaw, cur.yaw);
+        gl.uniform1f(U.uPitch, cur.pitch);
+        gl.uniform1f(U.uFx, reduceMotion ? 0 : 1);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        if (readout && now - lastReadout > 100) {
+          lastReadout = now;
+          const p = cur.pitch * 180 / Math.PI;
+          readout.textContent = `YAW ${deg(cur.yaw).toFixed(1).padStart(5, '0')}° · PITCH ${p < 0 ? '−' : '+'}${Math.abs(p).toFixed(1).padStart(4, '0')}°`;
         }
       }
+      function loop(now) { if (!lost) { draw(now); requestAnimationFrame(loop); } }
 
-      function loop() {
-        if (!running) return;
-        t += 0.012;
-        draw();
-        requestAnimationFrame(loop);
+      function upload(img) {
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
+        if (!ready) {
+          ready = true;
+          resize();
+          if (reduceMotion) { draw(performance.now()); addEventListener('scroll', () => draw(performance.now()), { passive: true }); }
+          else requestAnimationFrame(loop);
+          requestAnimationFrame(() => wrap.classList.add('ready'));
+        } else if (reduceMotion) draw(performance.now());
+      }
+      function load(src) {
+        return new Promise((res, rej) => {
+          const img = new Image();
+          img.decoding = 'async';
+          img.onload = () => res(img); img.onerror = rej;
+          img.src = src;
+        });
       }
 
-      hero.addEventListener('pointermove', e => {
-        const r = hero.getBoundingClientRect();
-        mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top;
-        readout.textContent = `X ${String(Math.round(mouse.x)).padStart(4, '0')} · Y ${String(Math.round(mouse.y)).padStart(4, '0')}`;
-      });
-      hero.addEventListener('pointerleave', () => { mouse.x = mouse.y = -9999; });
+      let lost = false;
+      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; wrap.classList.remove('ready'); wrap.classList.add('flat'); });
       addEventListener('resize', resize);
-      resize();
 
-      if (!reduceMotion) {
-        new IntersectionObserver(([e]) => {
-          const was = running;
-          running = e.isIntersecting;
-          if (running && !was) loop();
-        }).observe(hero);
-        loop();
-      }
+      // 2K first (fast), then sharpen to 4K. The fisheye magnifies the middle of the
+      // image, so even phones benefit; skip it only on data-saver / very slow links.
+      const conn = navigator.connection || {};
+      const wantBig = !conn.saveData && !/2g/.test(conn.effectiveType || '')
+        && gl.getParameter(gl.MAX_TEXTURE_SIZE) >= 4096;
+      load('assets/bg/universe-2k.webp')
+        .then(img => { upload(img); return wantBig ? load('assets/bg/universe-4k.webp') : null; })
+        .then(img => { if (img && !lost) upload(img); })
+        .catch(() => { if (!ready) wrap.classList.add('flat'); });
     })();
   </script>
 </body>
