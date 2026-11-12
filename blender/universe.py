@@ -33,6 +33,29 @@ from mathutils import Matrix, Vector
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 OUT_DIR = os.path.join(ROOT, "assets", "bg")
 BLEND_PATH = os.path.join(ROOT, "blender", "universe.blend")
+FONT_DIR = os.path.join(ROOT, "blender", "fonts")   # downloaded on first run (git-ignored)
+
+# The site's own fonts (Google Fonts, OFL). An old User-Agent makes the CSS API hand out .ttf.
+FONT_CSS = ("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@125,900"
+            "&family=JetBrains+Mono:wght@500;700")
+
+# Signs placed around the viewer. yaw: degrees, + = turning to the right.
+# The website reads their positions from assets/bg/world.json, so moving or
+# renaming a sign here only needs a re-render.
+SIGN_DIST = 16.0
+SIGN_Z = 1.0
+SIGNS = [
+    # yaws chosen so the gaps between sign edges are even (~17 degrees)
+    ("profile", 49, "PROFILE", "[ 01 ]  WHO I AM"),
+    ("work", 99, "SELECTED WORK", "[ 02 ]  PROJECTS"),
+    ("stack", 156, "STACK & SKILLS", "[ 04 ]  TOOLS I USE"),
+    ("experience", 209, "EXPERIENCE", "[ 03 ]  OUTSIDE CLASS"),
+    ("certified", 258, "CERTIFIED", "[ 04.1 ]  CREDENTIALS"),
+    ("contact", 307, "CONTACT", "[ 05 ]  OPEN THE CHANNEL"),
+]
+HERO = dict(dist=14.0, kicker="PORTFOLIO  //  SINGAPORE", line1="AZRI", line2="BIN AIDIR",
+            sub="ASPIRING SOFTWARE ENGINEER")
+SIGN_INFO = []   # filled while building; used to keep clutter out from in front of signs
 
 
 def srgb(hex_str):
@@ -187,6 +210,193 @@ def wireframe(ob, thickness):
     m.use_replace = True
     m.use_even_offset = True
     return m
+
+
+def blocks_sign(p, margin=5.0):
+    """True if point p sits between the camera and a sign's face (would cover the text)."""
+    horiz = math.hypot(p.x, p.y)
+    yaw = math.degrees(math.atan2(p.x, p.y))
+    pitch = math.degrees(math.atan2(p.z, max(horiz, 1e-6)))
+    for s in SIGN_INFO:
+        dyaw = (yaw - s["yaw"] + 180) % 360 - 180
+        if (abs(dyaw) < s["halfW"] + margin and abs(pitch - s["pitch"]) < s["halfH"] + margin + 3
+                and (s.get("see_through") or horiz < s["dist"] + 4)):
+            return True
+    return False
+
+
+# ------------------------------------------------------------------- fonts --
+def get_fonts():
+    names = {"display": "archivo-expanded-black.ttf", "mono": "jetbrains-mono-500.ttf",
+             "mono_bold": "jetbrains-mono-700.ttf"}
+    paths = {k: os.path.join(FONT_DIR, v) for k, v in names.items()}
+    if not all(os.path.exists(p) for p in paths.values()):
+        try:
+            import re
+            import urllib.request
+            os.makedirs(FONT_DIR, exist_ok=True)
+            req = urllib.request.Request(FONT_CSS, headers={"User-Agent": "Mozilla/4.0"})
+            css = urllib.request.urlopen(req, timeout=20).read().decode()
+            urls = re.findall(r"url\((https://[^)]+\.ttf)\)", css)
+            for key, url in zip(("display", "mono", "mono_bold"), urls):  # CSS order
+                urllib.request.urlretrieve(url, paths[key])
+            print("[universe] downloaded site fonts")
+        except Exception as e:
+            print(f"[universe] font download failed ({e}); using Windows fonts")
+    fallback = {"display": r"C:\Windows\Fonts\ariblk.ttf", "mono": r"C:\Windows\Fonts\consola.ttf",
+                "mono_bold": r"C:\Windows\Fonts\consolab.ttf"}
+    fonts = {}
+    for k in names:
+        p = paths[k] if os.path.exists(paths[k]) else fallback[k]
+        fonts[k] = bpy.data.fonts.load(p) if os.path.exists(p) else None  # None = Blender default
+    return fonts
+
+
+# ------------------------------------------------------------------- signs --
+def text_obj(name, body, font, size, mat, parent, loc, *, extrude=0.0, outline=0.0,
+             offset=0.0, spacing=1.0):
+    """Upright text facing the camera (in the sign's local frame the viewer is at -Y)."""
+    cu = bpy.data.curves.new(name, "FONT")
+    cu.body = body
+    if font:
+        cu.font = font
+    cu.size = size
+    cu.align_x = "CENTER"
+    cu.align_y = "CENTER"
+    cu.space_character = spacing
+    cu.extrude = extrude
+    cu.offset = offset
+    if outline:                      # neon tube that traces the letter outlines
+        cu.fill_mode = "NONE"
+        cu.bevel_depth = outline
+        cu.bevel_resolution = 2
+    cu.materials.append(mat)
+    ob = link(bpy.data.objects.new(name, cu))
+    ob.parent = parent
+    ob.location = loc
+    ob.rotation_euler = (math.pi / 2, 0, 0)
+    return ob
+
+
+def box(name, size, loc, mat, parent):
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1, matrix=Matrix.Diagonal((*size, 1)))
+    ob = mesh_object(name, bm, mat)
+    ob.parent = parent
+    ob.location = loc
+    return ob
+
+
+def sign_root(name, yaw_deg, dist):
+    root = link(bpy.data.objects.new(name, None))
+    yaw = math.radians(yaw_deg)
+    root.location = (math.sin(yaw) * dist, math.cos(yaw) * dist, 0)
+    root.rotation_euler = (0, 0, -yaw)          # local -Y faces the camera
+    return root
+
+
+def record_sign(sid, yaw, dist, width, z_bottom, z_top, see_through=False):
+    lo = math.degrees(math.atan2(z_bottom, dist))
+    hi = math.degrees(math.atan2(z_top, dist))
+    SIGN_INFO.append(dict(id=sid, yaw=yaw, pitch=round((lo + hi) / 2, 3), halfH=round((hi - lo) / 2, 3),
+                          halfW=round(math.degrees(math.atan2(width / 2, dist)), 3), dist=dist,
+                          see_through=see_through))
+
+
+def shadow_glow(name, width, height, loc, parent):
+    """Soft dark haze behind floating text so the busy world doesn't fight the letters."""
+    mat, nt, out = new_material(name)
+    N, L = nt.nodes, nt.links
+    tc = N.new("ShaderNodeTexCoord")
+    mp = N.new("ShaderNodeMapping")
+    mp.inputs["Scale"].default_value = (2 / width, 2 / height, 1)
+    L.new(tc.outputs["Object"], mp.inputs["Vector"])
+    gr = N.new("ShaderNodeTexGradient")
+    gr.gradient_type = "SPHERICAL"
+    L.new(mp.outputs["Vector"], gr.inputs["Vector"])
+    ramp = N.new("ShaderNodeValToRGB")
+    ramp.color_ramp.elements[0].position = 0.0
+    ramp.color_ramp.elements[0].color = (0, 0, 0, 1)
+    ramp.color_ramp.elements[1].position = 0.55
+    ramp.color_ramp.elements[1].color = (0.82, 0.82, 0.82, 1)
+    L.new(gr.outputs["Fac"], ramp.inputs["Fac"])
+    mix = N.new("ShaderNodeMixShader")
+    L.new(ramp.outputs["Color"], mix.inputs["Fac"])
+    L.new(N.new("ShaderNodeBsdfTransparent").outputs[0], mix.inputs[1])
+    black = N.new("ShaderNodeEmission")
+    black.inputs["Color"].default_value = (0, 0, 0, 1)
+    black.inputs["Strength"].default_value = 0
+    L.new(black.outputs[0], mix.inputs[2])
+    L.new(mix.outputs[0], out.inputs["Surface"])
+    bm = bmesh.new()
+    bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=0.5,
+                          matrix=Matrix.Diagonal((width, height, 1, 1)))
+    ob = mesh_object(name, bm, mat)
+    ob.parent = parent
+    ob.location = loc
+    ob.rotation_euler = (math.pi / 2, 0, 0)
+    return ob
+
+
+def build_signs(fonts):
+    mats = {
+        "title": emission_material("SignTitle", INK, 3.2),
+        "kicker": emission_material("SignKicker", ACCENT, 6.0),
+        "corner": emission_material("SignCorner", ACCENT, 12.0),
+        "strip": emission_material("SignStrip", ACCENT, 5.0),
+        "plate": dark_metal("SignPlate", roughness=0.4),
+        "hero_tube": emission_material("HeroTube", INK, 7.0),
+        "hero_sub": emission_material("HeroSub", INK, 2.2),
+    }
+
+    for sid, yaw, title, kicker in SIGNS:
+        root = sign_root(f"Sign_{sid}", yaw, SIGN_DIST)
+        zc = SIGN_Z
+        t = text_obj(f"{sid}_title", title, fonts["display"], 1.3, mats["title"], root,
+                     (0, 0, zc - 0.3), extrude=0.03)
+        k = text_obj(f"{sid}_kicker", kicker, fonts["mono_bold"], 0.62, mats["kicker"], root,
+                     (0, -0.01, zc + 1.1), spacing=1.1)
+        bpy.context.view_layer.update()
+        W = max(t.dimensions.x, k.dimensions.x) + 2.4
+        H = 3.9
+        pz = zc + 0.3
+        box(f"{sid}_plate", (W, 0.12, H), (0, 0.3, pz), mats["plate"], root)
+        box(f"{sid}_rule", (k.dimensions.x, 0.03, 0.03), (0, 0.15, zc + 0.62), mats["corner"], root)
+        L, th = 0.9, 0.06                      # HUD corner brackets
+        for sx in (-1, 1):
+            for sz in (-1, 1):
+                cx, cz = sx * W / 2, pz + sz * H / 2
+                box(f"{sid}_cx", (L, 0.05, th), (cx - sx * L / 2, 0.2, cz), mats["corner"], root)
+                box(f"{sid}_cz", (th, 0.05, L), (cx, 0.2, cz - sz * L / 2), mats["corner"], root)
+        bottom = pz - H / 2
+        h = bottom - FLOOR_Z
+        for sx in (-1, 1):                     # legs with a light strip
+            x = sx * (W / 2 - 0.8)
+            box(f"{sid}_leg", (0.16, 0.16, h), (x, 0.3, FLOOR_Z + h / 2), mats["plate"], root)
+            box(f"{sid}_legl", (0.035, 0.035, h), (x, 0.21, FLOOR_Z + h / 2), mats["strip"], root)
+        record_sign(sid, yaw, SIGN_DIST, W, bottom, pz + H / 2)
+
+    # hero: floating hologram of the name, mirroring the site's hero type
+    d = HERO["dist"]
+    root = sign_root("Sign_hero", 0, d)
+    k = text_obj("hero_kicker", HERO["kicker"], fonts["mono_bold"], 0.6, mats["kicker"], root,
+                 (0, 0, 4.6), spacing=1.1)
+    a = text_obj("hero_line1", HERO["line1"], fonts["display"], 2.2, mats["title"], root,
+                 (0, 0, 3.0), extrude=0.04)
+    b = text_obj("hero_line2", HERO["line2"], fonts["display"], 2.2, mats["hero_tube"], root,
+                 (0, 0, 1.0), outline=0.03)
+    s = text_obj("hero_sub", HERO["sub"], fonts["mono"], 0.62, mats["hero_sub"], root,
+                 (0, 0, -0.55), spacing=1.1)
+    bpy.context.view_layer.update()
+    sq = 0.36                                   # the orange square "full stop"
+    box("hero_dot", (sq, 0.08, sq), (a.dimensions.x / 2 + 0.38, 0, 3.0 - a.dimensions.y / 2 + sq / 2 + 0.06),
+        mats["corner"], root)
+    box("hero_rule", (k.dimensions.x, 0.03, 0.03), (0, 0, 4.15), mats["corner"], root)
+    W = max(a.dimensions.x + 1.2, b.dimensions.x, k.dimensions.x, s.dimensions.x) + 1.0
+    shadow_glow("hero_haze", W * 1.5, 9.5, (0, 2.0, 2.0), root)
+    # no backplate, so keep the whole line of sight clear (in front of and behind the name)
+    record_sign("hero", 0, d, W, -1.0, 5.0, see_through=True)
+    print(f"[universe] signs: {', '.join(i['id'] for i in SIGN_INFO)}")
 
 
 # ------------------------------------------------------------------ render --
@@ -414,7 +624,7 @@ def build_dome():
 
 def build_core():
     """Focal point straight ahead (+Y): what the site opens looking at."""
-    c = Vector((0, 38, 6))
+    c = Vector((0, 50, 32))   # high and far, so it glows above the name sign
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=1, radius=7.5)
     shell = mesh_object("CoreShell", bm, emission_material("CoreShell", ACCENT, 14.0))
@@ -435,7 +645,7 @@ def build_core():
     heart.location = c
 
     # orbit rings around the core
-    for i, (r, tilt) in enumerate(((11, 0.35), (14.5, -0.6), (19, 1.2))):
+    for i, (r, tilt) in enumerate(((10, 0.35), (12.5, -0.6), (15, 1.2))):
         bpy.ops.mesh.primitive_torus_add(
             major_radius=r, minor_radius=0.05 + i * 0.015,
             major_segments=160, minor_segments=6, location=c,
@@ -531,7 +741,7 @@ def build_shapes(core):
     placed = []
     while len(placed) < 26:
         p = ring_point(9, 45, -1.5, 18)
-        if (p - core).length < 16 or any((p - q).length < 6 for q in placed):
+        if (p - core).length < 16 or any((p - q).length < 6 for q in placed) or blocks_sign(p, 9):
             continue
         placed.append(p)
         kind = random.choice(("ico", "ico", "cube", "octa", "tet"))
@@ -558,7 +768,9 @@ def build_network(anchors):
     """Glowing nodes in the sky joined to their nearest neighbours."""
     nodes = list(anchors)
     while len(nodes) < 90:
-        nodes.append(ring_point(10, 60, 4, 40))
+        p = ring_point(10, 60, 4, 40)
+        if not blocks_sign(p):
+            nodes.append(p)
 
     bm = bmesh.new()
     for p in nodes:
@@ -571,7 +783,7 @@ def build_network(anchors):
         near = sorted(range(len(nodes)), key=lambda j: (nodes[j] - p).length)[1:3]
         for j in near:
             key = tuple(sorted((i, j)))
-            if key in seen or (nodes[j] - p).length > 22:
+            if key in seen or (nodes[j] - p).length > 22 or blocks_sign((p + nodes[j]) / 2):
                 continue
             seen.add(key)
             lines.append([p, nodes[j]])
@@ -599,12 +811,14 @@ def build_bolts(core, anchors):
     for _ in range(5):
         top = ring_point(25, 70, 25, 45)
         bolts.append(lightning(top, Vector((top.x * 1.1, top.y * 1.1, FLOOR_Z)), roughness=0.12))
+    bolts = [b for b in bolts if not any(blocks_sign(p) for p in b[::3])]
     forks = []
     for b in bolts:
         for _ in range(random.randint(1, 3)):
             start = random.choice(b[len(b) // 5: -len(b) // 5])
             end = start + rand_unit() * random.uniform(2, 6)
-            forks.append(lightning(start, end, generations=4, roughness=0.3))
+            if not blocks_sign(end):
+                forks.append(lightning(start, end, generations=4, roughness=0.3))
     curve_object("Bolts", bolts, 0.018, emission_material("BoltCore", INK, 40.0, fade_dist=120))
     curve_object("BoltHalo", bolts, 0.06, emission_material("BoltHalo", ELECTRIC, 0.7, fade_dist=120))
     curve_object("BoltForks", forks, 0.01, emission_material("BoltForks", ELECTRIC, 18.0, fade_dist=120))
@@ -615,8 +829,10 @@ def build_streams():
     lines = []
     for _ in range(70):
         p = ring_point(12, 70, 0, 0)
-        z = FLOOR_Z
         top = random.uniform(4, 26)
+        if any(blocks_sign(Vector((p.x, p.y, z))) for z in (FLOOR_Z, 0, top / 2, top)):
+            continue
+        z = FLOOR_Z
         while z < top:
             seg = random.uniform(0.3, 1.6)
             lines.append([Vector((p.x, p.y, z)), Vector((p.x, p.y, min(z + seg, top)))])
@@ -630,6 +846,8 @@ def build_dust():
         p = rand_unit() * random.uniform(3.5, 70)
         if p.z < FLOOR_Z + 0.2:
             p.z = random.uniform(FLOOR_Z + 0.3, 6)
+        if blocks_sign(p, 2):
+            continue
         bmesh.ops.create_icosphere(bm, subdivisions=1, radius=random.uniform(0.008, 0.035) * (p.length / 8) ** 0.6,
                                    matrix=Matrix.Translation(p))
     mesh_object("Dust", bm, emission_material("Dust", EMBER, 12.0, fade_dist=70))
@@ -654,8 +872,10 @@ def main():
     setup_world(scene)
     setup_compositor(scene)
 
+    fonts = get_fonts()
     build_floor()
     build_dome()
+    build_signs(fonts)
     core = build_core()
     build_orbits()
     build_towers()
@@ -666,6 +886,11 @@ def main():
     build_dust()
 
     os.makedirs(OUT_DIR, exist_ok=True)
+    import json
+    with open(os.path.join(OUT_DIR, "world.json"), "w") as f:
+        keep = ("id", "yaw", "pitch", "halfW", "halfH")
+        json.dump({"signs": [{k: s[k] for k in keep} for s in SIGN_INFO]}, f, indent=1)
+    print("[universe] wrote assets/bg/world.json")
     if not args.preview:
         bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
         print(f"[universe] saved {os.path.relpath(BLEND_PATH, ROOT)}")

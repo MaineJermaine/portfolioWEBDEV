@@ -5,6 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Azri Bin Aidir — Portfolio</title>
   <meta name="description" content="Azri Bin Aidir — Aspiring Software Engineer, Diploma in Information Technology at Nanyang Polytechnic.">
+  <script>
+    // Pick 3D world or 2D page before first paint (no flash of the wrong layout).
+    // ?view=2d / ?view=3d in the URL, else the visitor's last choice, else 3D.
+    (function () {
+      try {
+        var want = new URLSearchParams(location.search).get('view') || localStorage.getItem('view')
+          || (matchMedia('(prefers-reduced-motion: reduce)').matches ? '2d' : '3d');
+        if (want === '3d') document.documentElement.classList.add('world');
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -140,6 +151,192 @@
       background: var(--bg); opacity: var(--scrim, 0);
     }
     main { position: relative; z-index: 1; }
+
+    /* ---------- 3D world mode ---------- */
+    .world-ui { display: none; }
+    html.world .world-ui { display: block; }
+    html.world body { overflow: hidden; }
+    html.world main, html.world .progress { display: none; }
+    html.world .universe { height: 100%; height: 100dvh; }
+    .mode-short { display: none; }
+    .mode-btn b { font-weight: inherit; }
+
+    .stage {
+      position: fixed; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh;
+      z-index: 2; overflow: hidden; cursor: grab;
+      touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .stage.dragging { cursor: grabbing; }
+    .signs, .cards { position: absolute; inset: 0; pointer-events: none; }
+    .signs > *, .cards > * { pointer-events: auto; }
+
+    /* invisible click target over each neon sign, with HUD brackets on hover */
+    .sign-hit {
+      position: absolute; left: 0; top: 0; padding: 0; cursor: pointer;
+      opacity: 0; transition: opacity .6s;
+    }
+    html.world-ready .sign-hit { opacity: 1; }
+    .sign-hit::before, .sign-hit::after {
+      content: ''; position: absolute; width: 22px; height: 22px; opacity: 0;
+      border: 2px solid var(--accent); transition: opacity .25s, inset .25s, left .25s, top .25s, right .25s, bottom .25s;
+    }
+    .sign-hit::before { left: 0; top: 0; border-right: 0; border-bottom: 0; }
+    .sign-hit::after { right: 0; bottom: 0; border-left: 0; border-top: 0; }
+    .sign-hit:hover::before, .sign-hit:focus-visible::before { opacity: 1; left: -10px; top: -10px; }
+    .sign-hit:hover::after, .sign-hit:focus-visible::after { opacity: 1; right: -10px; bottom: -10px; }
+    .sign-hit:focus { outline: none; }
+    .sign-cta {
+      position: absolute; left: 50%; top: 100%; transform: translate(-50%, 6px);
+      padding: 6px 10px; white-space: nowrap; background: var(--accent); color: var(--bg); font-weight: 700;
+      opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none;
+    }
+    .sign-hit:hover .sign-cta, .sign-hit:focus-visible .sign-cta { opacity: 1; transform: translate(-50%, 14px); }
+    .sign-hit.open .sign-cta, .sign-hit.open::before, .sign-hit.open::after { display: none; }
+    @media (hover: none) {
+      .sign-cta { opacity: .9; transform: translate(-50%, 10px); }
+      .sign-hit::before, .sign-hit::after { opacity: .6; }
+    }
+
+    /* floating content panels */
+    .wcard {
+      position: absolute; left: 0; top: 0; display: none;
+      width: min(var(--w, 380px), 86vw); max-height: min(72vh, 640px);
+      overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+      background: rgba(12, 12, 10, 0.86);
+      border: 1px solid var(--line-strong);
+      box-shadow: 0 0 0 1px rgba(255, 91, 31, 0.07), 0 24px 70px rgba(0, 0, 0, 0.55);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      opacity: 0; will-change: transform, opacity;
+      cursor: auto; user-select: text; -webkit-user-select: text; touch-action: pan-y;
+      scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
+    }
+    .wcard.on { display: block; }
+    .wcard-bar {
+      position: sticky; top: 0; z-index: 2;
+      display: flex; justify-content: space-between; gap: 12px;
+      padding: 8px 12px; background: var(--ink); color: var(--bg);
+    }
+    .wcard-body { padding: 18px 20px 20px; }
+    .wcard.bare .wcard-body { padding: 0; }
+    .wcard .reveal { opacity: 1; transform: none; }
+    .wcard .hero-meta { margin-bottom: 0; }
+    .wcard .hero-role { margin-top: 16px; font-size: 20px; }
+    .wcard .hero-actions { margin-top: 22px; }
+    .wcard .spec { border: 0; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    .wcard .lede { font-size: 19px; line-height: 1.45; }
+    .wcard .langs { margin-top: 0; grid-template-columns: 1fr; }
+    .wcard .langs > div { background: rgba(13, 13, 11, 0.7); }
+    .wcard .proj, .wcard .proj:first-child { border: 0; }
+    .wcard .proj-head { display: block; padding: 0 0 14px; pointer-events: none; color: var(--ink); }
+    .wcard .proj-head::before, .wcard .proj-toggle, .wcard .proj-no { display: none; }
+    .wcard .proj-title { display: block; font-size: 26px; }
+    .wcard .proj-type { display: block !important; margin-top: 10px; color: var(--accent); }
+    .wcard .proj-body { grid-template-rows: 1fr; }
+    .wcard .proj-inner { grid-template-columns: minmax(0, 1fr); gap: 18px; padding: 0; }
+    .wcard .proj-inner > .spacer { display: none; }
+    .wcard .proj-inner > .media { order: -1; }   /* gallery first: the visuals are the hook */
+    .wcard .proj-copy li { font-size: 14.5px; }
+    .wcard .xp { display: block; padding: 0; border: 0; }
+    .wcard .xp-no { display: none; }
+    .wcard .xp ul { margin-top: 14px; }
+    .wcard .stack-cell { background: none; padding: 0; }
+    .wcard .cert { display: block; padding: 0; border: 0; }
+    .wcard .cert:hover { padding-left: 0; }
+    .wcard .cert-no { display: none; }
+    .wcard .cert-by { display: block !important; margin-top: 10px; }
+    .wcard .cert-link { display: inline-block; margin-top: 14px; color: var(--accent); }
+    .wcard-contact h2 {
+      margin: 0; font-weight: 900; font-stretch: 125%; text-transform: uppercase;
+      font-size: 46px; line-height: 0.88; letter-spacing: -0.03em;
+    }
+    .wcard-contact h2 .outline { color: transparent; -webkit-text-stroke: 1.2px var(--ink); }
+    .wcard .contact-grid { grid-template-columns: 1fr; margin-top: 24px; }
+    .wcard .contact-grid > div, .wcard .contact-grid > div + div { padding: 14px 0; border-left: 0; border-top: 1px solid var(--line); }
+
+    .wclose {
+      position: absolute; left: 0; top: 0; z-index: 5; display: none; align-items: center; gap: 10px;
+      padding: 9px 14px; background: rgba(12, 12, 10, 0.9); border: 1px solid var(--accent); color: var(--ink);
+    }
+    .wclose.on { display: inline-flex; }
+    .wclose:hover { background: var(--accent); color: var(--bg); }
+    .wclose span { color: var(--muted); }
+    .wclose:hover span { color: var(--bg); }
+
+    /* compass / heading strip */
+    .compass {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; height: 58px;
+      border-top: 1px solid var(--line); background: rgba(13, 13, 11, 0.74);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      opacity: 0; transition: opacity .6s;
+    }
+    html.world-ready .compass { opacity: 1; }
+    .compass-strip {
+      position: absolute; inset: 0; overflow: hidden;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 14%, #000 86%, transparent);
+    }
+    .compass-strip .tick { position: absolute; left: 0; bottom: 0; width: 1px; height: 7px; background: var(--line-strong); }
+    .compass-strip .tick.mid { height: 12px; }
+    .compass-strip .tick.major { height: 18px; background: var(--muted); }
+    .clabel {
+      position: absolute; left: 0; top: 9px; padding: 4px 9px; white-space: nowrap;
+      border: 1px solid transparent; color: var(--muted); transition: color .2s, border-color .2s;
+    }
+    .clabel:hover, .clabel.active { color: var(--ink); border-color: var(--accent); }
+    .compass-needle { position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--accent); }
+    .compass-needle::before {
+      content: ''; position: absolute; left: -5px; top: 0;
+      border: 5px solid transparent; border-top-color: var(--accent);
+    }
+    .compass-hdg { position: absolute; left: var(--gutter); top: 50%; transform: translateY(-50%); color: var(--accent); }
+
+    .hint {
+      position: fixed; left: 50%; bottom: 76px; z-index: 3; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 10px; padding: 10px 16px; white-space: nowrap;
+      background: rgba(13, 13, 11, 0.82); border: 1px solid var(--line-strong); color: var(--ink);
+      pointer-events: none; transition: opacity .6s;
+    }
+    .hint i { width: 8px; height: 8px; background: var(--accent); animation: blink 1.4s steps(2) infinite; }
+    .hint.gone { opacity: 0; }
+
+    /* live project feed floating above the Work sign */
+    .teaser {
+      position: absolute; left: 0; top: 0; width: 290px; padding: 0; text-align: left; cursor: pointer;
+      background: rgba(12, 12, 10, 0.9); border: 1px solid var(--line-strong);
+      box-shadow: 0 0 0 1px rgba(255, 91, 31, 0.08), 0 18px 50px rgba(0, 0, 0, 0.55);
+      opacity: 0; transition: opacity .5s, border-color .2s;
+    }
+    html.world-ready .teaser.on { opacity: 1; }
+    .teaser:hover, .teaser:focus-visible { border-color: var(--accent); outline: none; }
+    .teaser::after {             /* tether down to the sign */
+      content: ''; position: absolute; left: 50%; top: 100%; width: 1px; height: 16px;
+      background: linear-gradient(var(--accent), transparent);
+    }
+    .teaser-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: var(--ink); color: var(--bg); }
+    .teaser-bar i { display: inline-block; width: 7px; height: 7px; margin-right: 7px; background: var(--accent); animation: blink 1.4s steps(2) infinite; }
+    .teaser-stage { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: #080807; }
+    .teaser-stage img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+      opacity: 0; transition: opacity .9s ease;
+    }
+    .teaser-stage img.show { opacity: 1; animation: drift 3.6s linear forwards; }
+    @keyframes drift { from { transform: scale(1.02); } to { transform: scale(1.1) translate(-1.5%, -1%); } }
+    .teaser-stage::after {       /* scanlines + glitch flash on each cut */
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.22) 0 1px, transparent 1px 3px);
+    }
+    .teaser-flash { position: absolute; inset: 0; background: var(--accent); mix-blend-mode: screen; opacity: 0; pointer-events: none; }
+    .teaser-flash.go { animation: flash .35s ease-out; }
+    @keyframes flash { 0% { opacity: .35; } 100% { opacity: 0; } }
+    .teaser-cap { display: flex; gap: 10px; align-items: center; padding: 8px 10px; color: var(--ink); white-space: nowrap; overflow: hidden; }
+    .teaser-cap .tno { color: var(--accent); flex: none; }
+    .teaser-cap .ttitle { overflow: hidden; text-overflow: ellipsis; }
+    .teaser-cap .topen { margin-left: auto; color: var(--muted); flex: none; transition: color .2s; }
+    .teaser:hover .topen { color: var(--accent); }
+    .teaser-bar b { font-weight: inherit; }
+    .teaser-bar span { white-space: nowrap; }
+    @media (max-width: 600px) { .teaser { width: 210px; } .teaser-cap .topen, .teaser-bar .tlong { display: none; } }
+    @media (prefers-reduced-motion: reduce) { .teaser-stage img.show { animation: none; } .teaser-flash.go { animation: none; } }
     .hero-body {
       position: relative; z-index: 2; flex: 1;
       display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: end;
@@ -304,6 +501,8 @@
     .proj-links { display: flex; gap: 20px; margin-top: 22px; }
     .proj-links a { text-decoration: none; color: var(--accent); border-bottom: 1px solid currentColor; padding-bottom: 2px; }
     .proj-links a:hover { color: var(--ink); }
+    .demo-btn { margin: 0 0 24px; }
+    .demo-btn .play { width: 0; height: 0; border: 6px solid transparent; border-left: 9px solid currentColor; border-right: 0; }
 
     .viewer { border: 1px solid var(--line-strong); background: #080807; position: relative; }
     .viewer-bar {
@@ -311,6 +510,8 @@
       padding: 8px 12px; border-bottom: 1px solid var(--line-strong); color: var(--muted);
     }
     .viewer-bar i { display: inline-block; width: 7px; height: 7px; border: 1px solid var(--dim); margin-right: 5px; }
+    .viewer-bar > span:first-child { flex: none; }
+    .viewer-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .viewer-stage { position: relative; aspect-ratio: 16 / 10; overflow: hidden; }
     .viewer-track { display: flex; height: 100%; transition: transform .5s cubic-bezier(.7, 0, .2, 1); }
     .viewer-slide { min-width: 100%; height: 100%; display: grid; place-items: center; }
@@ -404,7 +605,7 @@
       .stack { grid-template-columns: repeat(2, 1fr); }
       .proj-head { grid-template-columns: 56px 1fr 40px; }
       .proj-type { display: none; }
-      .proj-inner { grid-template-columns: 1fr; }
+      .proj-inner { grid-template-columns: minmax(0, 1fr); }  /* minmax: a wide video can't stretch the column */
       .proj-inner > .spacer { display: none; }
       .cert { grid-template-columns: 56px 1fr 120px; }
       .cert-by { display: none; }
@@ -437,6 +638,9 @@
       .contact-grid { grid-template-columns: 1fr; }
       .contact-grid > div + div { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
       .readout { display: none; }
+      .mode-short { display: inline; }
+      .compass-hdg { display: none; }
+      .wcard-contact h2 { font-size: 36px; }
       .spec-row { grid-template-columns: 96px 1fr; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -450,6 +654,22 @@
   <div class="progress" id="progress"></div>
   <div class="universe" id="universe" aria-hidden="true"><canvas></canvas></div>
   <div class="universe-scrim" id="scrim" aria-hidden="true"></div>
+
+  <!-- 3D world UI (only shown in 3D mode) -->
+  <div class="world-ui">
+    <div class="stage" id="stage">
+      <div class="signs" id="signs"></div>
+      <div class="cards" id="cards">
+        <button class="wclose mono" id="wclose" type="button">✕ Close <span>Esc</span></button>
+      </div>
+    </div>
+    <div class="hint mono" id="hint"><i></i><span id="hint-text">Loading the world…</span></div>
+    <nav class="compass mono" aria-label="Signs in the world">
+      <div class="compass-strip" id="compass-strip"></div>
+      <div class="compass-needle"></div>
+      <div class="compass-hdg" id="compass-hdg">HDG 000°</div>
+    </nav>
+  </div>
 
   <!-- Top bar -->
   <header class="topbar">
@@ -467,6 +687,7 @@
       </nav>
       <div class="topbar-right">
         <span class="clock mono">SGT <b id="clock">--:--:--</b></span>
+        <button class="btn mode-btn" id="mode-btn" type="button"><span class="mode-long">2D view</span><b class="mode-short">2D</b></button>
         <button class="btn btn-solid resume-btn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
           <span>Résumé</span>
@@ -588,6 +809,7 @@
               <div class="proj-inner">
                 <div class="spacer"></div>
                 <div class="proj-copy">
+                  <a class="btn btn-solid demo-btn" href="https://8jiwoo.github.io/Plateloop/dist/8-plateloop-lunch-rush-3d.html" target="_blank" rel="noopener"><span class="play" aria-hidden="true"></span>Try the Lunch Rush demo!</a>
                   <ul>
                     <li>Built for the EcoLoop sustainability hackathon in Singapore: a tray scanner concept that scans each tray before and after a meal to measure what was served, eaten and left, down to the nutrients.</li>
                     <li>Prototyped one scan powering four apps: a kitchen dashboard that plans tomorrow's order and tracks waste by dish, Loopi (a virtual pet for students that rewards less waste), Loopi Care for hospitals and Loopi Work for offices.</li>
@@ -1080,7 +1302,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       const show = () => {
         track.style.transform = `translateX(-${i * 100}%)`;
         count.textContent = `${pad(i + 1)} / ${pad(files.length)}`;
-        name.textContent = files[i];
+        name.textContent = files[i].split('/').pop();   // file name, not the full URL
         // Only the visible clip plays, so the large videos don't all stream at once
         track.querySelectorAll('video').forEach((v, vi) => {
           const active = v.closest('.viewer-slide') === track.children[i];
@@ -1118,28 +1340,61 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       });
     });
 
-    // ---------- 3D universe background ----------
-    // A 360° panorama rendered in Blender (blender/universe.py), wrapped around the
-    // viewer by one small fragment shader: fisheye lens, slow drift, scroll + mouse
-    // steering, and an "energy" pulse over the bright parts. No 3D library needed.
+    // ---------- 3D world ----------
+    // A 360° panorama rendered in Blender (blender/universe.py) is wrapped around the
+    // viewer by one small fragment shader (fisheye lens + "energy" pulse). Two modes:
+    //   3D world: drag to look around; the neon signs open floating content panels.
+    //   2D view:  the classic scrolling page, with the world as a moving backdrop.
+    // No 3D library: panels and click targets are placed with the same fisheye maths
+    // as the shader, so they stay locked to the world while you look around.
     (function () {
+      const html = document.documentElement;
       const wrap = document.getElementById('universe');
       const canvas = wrap.querySelector('canvas');
       const scrim = document.getElementById('scrim');
       const hero = document.querySelector('.hero');
       const readout = document.getElementById('readout');
-      const root = document.documentElement;
+      const modeBtn = document.getElementById('mode-btn');
+      const stage = document.getElementById('stage');
+      const signLayer = document.getElementById('signs');
+      const cardLayer = document.getElementById('cards');
+      const closeBtn = document.getElementById('wclose');
+      const hint = document.getElementById('hint');
+      const hintText = document.getElementById('hint-text');
+      const strip = document.getElementById('compass-strip');
+      const hdg = document.getElementById('compass-hdg');
+      const DEG = Math.PI / 180, TAU = Math.PI * 2;
+      const touch = matchMedia('(hover: none)').matches;
+      const wrapAngle = a => ((a + Math.PI) % TAU + TAU) % TAU - Math.PI;
+      const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+      const easeOut = t => 1 - Math.pow(1 - t, 3);
+      const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      const isWorld = () => html.classList.contains('world');
 
-      // Fade the background behind content once you scroll past the hero.
+      // ----- 2D mode: dim the backdrop once you scroll past the hero -----
       function updateScrim() {
-        const k = Math.min(1, Math.max(0, scrollY / (hero.offsetHeight * 0.75)));
+        const k = isWorld() ? 0 : clamp(scrollY / (hero.offsetHeight * 0.75), 0, 1);
         scrim.style.setProperty('--scrim', (k * 0.74).toFixed(3));
       }
       addEventListener('scroll', updateScrim, { passive: true });
       updateScrim();
 
+      function setModeLabel() {
+        const w = isWorld();
+        modeBtn.querySelector('.mode-long').textContent = w ? '2D view' : '3D world';
+        modeBtn.querySelector('.mode-short').textContent = w ? '2D' : '3D';
+        modeBtn.setAttribute('aria-label', w ? 'Switch to the classic 2D page' : 'Switch to the 3D world');
+      }
+      function fallbackTo2D() {           // no WebGL / missing data: the classic page still works
+        html.classList.remove('world', 'world-ready');
+        modeBtn.hidden = true;
+        updateScrim();
+      }
+      setModeLabel();
+
+      // ----- renderer -----
       const gl = canvas.getContext('webgl', { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' });
-      if (!gl) { wrap.classList.add('flat'); return; }
+      if (!gl) { wrap.classList.add('flat'); fallbackTo2D(); return; }
 
       const VERT = 'attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }';
       const FRAG = `
@@ -1150,7 +1405,8 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         #endif
         uniform sampler2D uTex;
         uniform vec2 uRes;
-        uniform float uTime, uYaw, uPitch, uFov, uFx;
+        uniform float uTime, uYaw, uPitch, uFov, uFx, uHiAmt, uDim;
+        uniform vec4 uHi;   // highlighted sign: yaw, pitch, half width, half height (radians)
 
         // fisheye ray for screen direction n at angle th from the centre -> panorama uv
         vec2 rayUv(vec2 n, float th) {
@@ -1168,14 +1424,12 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           vec2 n = r > 1e-4 ? p / length(p) : vec2(0.0);
           float th = r * uFov * 0.5;                        // equidistant fisheye
 
-          // lens: slight colour fringing toward the edges
-          float ca = 0.007 * r * r;
+          float ca = 0.007 * r * r;                         // lens colour fringing
           vec3 col = vec3(
             texture2D(uTex, rayUv(n, th * (1.0 + ca))).r,
             texture2D(uTex, rayUv(n, th)).g,
             texture2D(uTex, rayUv(n, th * (1.0 - ca))).b);
 
-          // energy: a slow wave of current through the bright (neon) parts, plus a faint hum
           vec2 uv = rayUv(n, th);
           float lum = dot(col, vec3(0.299, 0.587, 0.114));
           float glow = smoothstep(0.22, 0.8, lum);
@@ -1185,7 +1439,15 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           col *= mix(1.0, hum, glow * uFx);
           col += col * glow * (wave * 0.55 + surge * 0.5) * uFx;
 
-          col *= 1.0 - 0.7 * smoothstep(0.5, 1.05, r);       // lens vignette
+          // hovered / open sign lights up
+          float lon = (uv.x - 0.5) * 6.2831853, lat = (uv.y - 0.5) * 3.1415927;
+          float dl = abs(mod(lon - uHi.x + 3.1415927, 6.2831853) - 3.1415927);
+          float box = (1.0 - smoothstep(uHi.z * 0.92, uHi.z * 1.12, dl))
+                    * (1.0 - smoothstep(uHi.w * 0.9, uHi.w * 1.2, abs(lat - uHi.y)));
+          col *= 1.0 - 0.5 * uDim * (1.0 - box);           // dim the world behind open panels
+          col += col * glow * box * uHiAmt * 1.3 + vec3(1.0, 0.36, 0.12) * box * uHiAmt * 0.035;
+
+          col *= 1.0 - 0.7 * smoothstep(0.5, 1.05, r);      // lens vignette
           gl_FragColor = vec4(col, 1.0);
         }`;
 
@@ -1202,7 +1464,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FRAG));
         gl.linkProgram(prog);
         if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
-      } catch (err) { console.warn('universe:', err); wrap.classList.add('flat'); return; }
+      } catch (err) { console.warn('world:', err); wrap.classList.add('flat'); fallbackTo2D(); return; }
       gl.useProgram(prog);
 
       gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
@@ -1211,7 +1473,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       const U = {};
-      ['uTex', 'uRes', 'uTime', 'uYaw', 'uPitch', 'uFov', 'uFx'].forEach(k => U[k] = gl.getUniformLocation(prog, k));
+      ['uTex', 'uRes', 'uTime', 'uYaw', 'uPitch', 'uFov', 'uFx', 'uHi', 'uHiAmt', 'uDim'].forEach(k => U[k] = gl.getUniformLocation(prog, k));
 
       const tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -1222,61 +1484,537 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
       gl.uniform1i(U.uTex, 0);
 
-      // Resolution: render at most ~2.3 MP; the image is soft, nobody needs retina here.
-      let W = 0, H = 0;
-      function resize() {
-        const cw = wrap.clientWidth, ch = wrap.clientHeight;
-        const scale = Math.min(devicePixelRatio || 1, Math.sqrt(2.3e6 / (cw * ch)));
-        W = Math.round(cw * scale); H = Math.round(ch * scale);
-        canvas.width = W; canvas.height = H;
-        gl.viewport(0, 0, W, H);
-        gl.uniform2f(U.uRes, W, H);
-        // wider lens on landscape screens, tighter on tall phones
-        gl.uniform1f(U.uFov, (W > H ? 150 : 128) * Math.PI / 180);
-        if (reduceMotion && ready) draw(performance.now());
+      // ----- view + projection (mirrors the shader exactly) -----
+      const view = { yaw: 0, pitch: 0.1 };
+      let fov = 150 * DEG, cssW = 1, cssH = 1;
+      const pxPerRad = () => (Math.hypot(cssW, cssH) / 2) / (fov / 2);
+
+      // world direction (yaw, pitch) -> CSS pixel position + angle from screen centre
+      function project(yaw, pitch) {
+        const cp = Math.cos(pitch);
+        const x0 = Math.sin(yaw) * cp, y0 = Math.sin(pitch), z0 = Math.cos(yaw) * cp;
+        const cy = Math.cos(view.yaw), sy = Math.sin(view.yaw);
+        const x1 = x0 * cy - z0 * sy, z1 = x0 * sy + z0 * cy;
+        const cP = Math.cos(view.pitch), sP = Math.sin(view.pitch);
+        const y2 = y0 * cP - z1 * sP, z2 = y0 * sP + z1 * cP;
+        const th = Math.acos(clamp(z2, -1, 1));
+        const len = Math.hypot(x1, y2) || 1e-9;
+        const rpx = th * pxPerRad();
+        return { x: cssW / 2 + x1 / len * rpx, y: cssH / 2 - y2 / len * rpx, th };
       }
 
-      // Steering: slow drift + scroll turns the world + mouse looks around a little.
-      const look = { x: 0, y: 0 }, cur = { yaw: 0, pitch: 0.05 };
+      function resize() {
+        cssW = wrap.clientWidth; cssH = wrap.clientHeight;
+        const scale = Math.min(devicePixelRatio || 1, Math.sqrt(2.3e6 / (cssW * cssH)));
+        canvas.width = Math.round(cssW * scale); canvas.height = Math.round(cssH * scale);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.uniform2f(U.uRes, canvas.width, canvas.height);
+        const w = isWorld();
+        fov = (cssW > cssH ? (w ? 140 : 150) : (w ? 120 : 128)) * DEG;
+        gl.uniform1f(U.uFov, fov);
+        if (openSec) layout(openSec);
+      }
+
+      // ----- signs (positions come from Blender via world.json) -----
+      const NAMES = { hero: 'Intro', profile: 'Profile', work: 'Work', stack: 'Stack & skills', experience: 'Experience', certified: 'Certified', contact: 'Contact' };
+      const signs = {}, signEls = {};
+      let order = [], dataReady = false, texReady = false;
+      let hover = null, hiId = null, hiAmt = 0, dimAmt = 0;
+
+      function buildSigns() {
+        order.forEach(s => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'sign-hit';
+          b.setAttribute('aria-label', `Open ${NAMES[s.id]}`);
+          b.innerHTML = `<span class="sign-cta mono">${touch ? 'Tap' : 'Click'} to open ▸</span>`;
+          b.addEventListener('click', () => { if (!suppressClick) open(s.id); });
+          b.addEventListener('pointerenter', () => { if (!touch) hover = s.id; });
+          b.addEventListener('pointerleave', () => { if (hover === s.id) hover = null; });
+          b.addEventListener('focus', () => { hover = s.id; });
+          b.addEventListener('blur', () => { if (hover === s.id) hover = null; });
+          signLayer.appendChild(b);
+          signEls[s.id] = b;
+        });
+      }
+
+      function placeSign(el, s) {
+        const c = project(s.yaw, s.pitch);
+        if (c.th > fov * 0.5) { el.style.visibility = 'hidden'; return; }
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const [a, b] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 1], [0, -1], [-1, 0], [1, 0]]) {
+          const p = project(s.yaw + a * s.halfW, s.pitch + b * s.halfH);
+          x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y);
+        }
+        el.style.visibility = '';
+        el.style.transform = `translate3d(${x0.toFixed(1)}px, ${y0.toFixed(1)}px, 0)`;
+        el.style.width = (x1 - x0).toFixed(1) + 'px';
+        el.style.height = (y1 - y0).toFixed(1) + 'px';
+      }
+
+      // ----- panels: the page's own content, borrowed into floating cards -----
+      const $ = s => document.querySelector(s);
+      const $$ = s => [...document.querySelectorAll(s)];
+      const borrowed = [], autoOpened = [], secs = {};
+      function card(nodes, bar, w, cls) {
+        const el = document.createElement('div');
+        el.className = 'wcard' + (cls ? ' ' + cls : '');
+        el.style.setProperty('--w', w + 'px');
+        if (bar) el.innerHTML = `<div class="wcard-bar mono"><span>${bar[0]}</span><span>${bar[1]}</span></div>`;
+        const body = document.createElement('div');
+        body.className = 'wcard-body';
+        nodes.filter(Boolean).forEach(n => {
+          const mark = document.createComment('world');
+          n.replaceWith(mark);
+          borrowed.push([n, mark]);
+          body.appendChild(n);
+        });
+        el.appendChild(body);
+        cardLayer.appendChild(el);
+        return el;
+      }
+      const SECTIONS = {
+        hero: () => [
+          card([$('.hero-meta'), $('.hero-role'), $('.hero-actions')], ['[ 00 ] Hello', 'A-00'], 430),
+          card([$('.spec')], null, 380, 'bare'),
+        ],
+        profile: () => [
+          card([$('#profile .lede')], ['[ 01 ] Profile', '01/03'], 440),
+          card([$('#profile .edu')], ['[ 01 ] Education', '02/03'], 380),
+          card([$('#profile .langs')], ['[ 01 ] Languages', '03/03'], 360),
+        ],
+        work: () => $$('#work .proj').map((p, i) => card([p], ['[ 02 ] Selected work', `P—0${i + 1}`], 500)),
+        stack: () => $$('#stack .stack-cell').map((c, i, all) => card([c], ['[ 04 ] Stack & skills', `${i + 1}/${all.length}`], 300)),
+        experience: () => $$('#experience .xp').map((x, i) => card([x], ['[ 03 ] Experience', `E—0${i + 1}`], 440)),
+        certified: () => $$('#certifications .cert').map((c, i) => card([c], ['[ 04.1 ] Certified', `C—0${i + 1}`], 340)),
+        contact: () => [card([$('#contact h2'), $('#contact .contact-grid')], ['[ 05 ] Contact', 'Open channel'], 470, 'wcard-contact')],
+      };
+
+      // Arrange a section's cards in columns either side of its sign: right, left, right…
+      function layout(sec) {
+        const s = signs[sec.id], ppr = pxPerRad();
+        const gap = 16 / ppr, maxH = (cssH - 150) / ppr;
+        const sizes = sec.cards.map(c => ({ w: c.offsetWidth / ppr, h: c.offsetHeight / ppr }));
+        const cols = [];
+        for (let i = 0; i < sizes.length;) {
+          const col = { items: [], w: 0, h: 0 };
+          while (i < sizes.length && (!col.items.length || (col.items.length < 2 && col.h + gap + sizes[i].h <= maxH))) {
+            col.h += (col.items.length ? gap : 0) + sizes[i].h;
+            col.w = Math.max(col.w, sizes[i].w);
+            col.items.push(i++);
+          }
+          cols.push(col);
+        }
+        let right = s.halfW + gap * 1.5, left = right;
+        sec.slots = [];
+        cols.forEach((col, k) => {
+          const side = k % 2 ? -1 : 1;
+          const off = side > 0 ? right : left;
+          const yaw = s.yaw + side * (off + col.w / 2);
+          if (side > 0) right += col.w + gap; else left += col.w + gap;
+          let top = s.pitch + col.h / 2;
+          col.items.forEach(i => {
+            sec.slots[i] = { yaw: wrapAngle(yaw), pitch: top - sizes[i].h / 2 };
+            top -= sizes[i].h + gap;
+          });
+        });
+      }
+
+      let openSec = null, openedAt = 0;
+      // focus: optional element inside one of the section's cards to turn towards
+      function open(id, focus) {
+        if (!signs[id]) return;
+        hideHint();
+        if (openSec && openSec.id === id) { lookAtSection(openSec, focus); return; }
+        close();
+        let sec = secs[id];
+        if (!sec) {
+          sec = secs[id] = { id, cards: SECTIONS[id](), slots: [] };
+          if (id === 'work') sec.cards.forEach(c => {          // expand projects so their media builds
+            const p = c.querySelector('.proj');
+            if (p && !p.classList.contains('open')) { p.querySelector('.proj-head').click(); autoOpened.push(p); }
+          });
+        }
+        sec.cards.forEach(c => { c.classList.add('on'); c.style.opacity = 0; });
+        layout(sec);
+        openSec = sec;
+        openedAt = performance.now();
+        signEls[id].classList.add('open');
+        closeBtn.classList.add('on');
+        closeBtn.querySelector('span').textContent = touch ? `Swipe to read all ${sec.cards.length}` : `Esc · drag to read all ${sec.cards.length}`;
+        lookAtSection(sec, focus);
+        setActiveNav(id);
+      }
+      function close() {
+        if (!openSec) return;
+        const sec = openSec;
+        openSec = null;
+        signEls[sec.id].classList.remove('open');
+        closeBtn.classList.remove('on');
+        sec.cards.forEach(c => { c.classList.remove('on'); c.querySelectorAll('video').forEach(v => v.pause()); });
+        setActiveNav(null);
+      }
+      closeBtn.addEventListener('click', close);
+      function lookAtSection(sec, focus) {
+        const s = signs[sec.id];
+        const fi = focus ? sec.cards.findIndex(c => c.contains(focus)) : -1;
+        // a specific card if asked; narrow screens can't fit sign + panels, so the first card
+        const target = sec.slots[fi] || (cssW < 760 && sec.slots[0]) || s;
+        turnTo(target.yaw, clamp(target.pitch, -0.3, 0.3));
+      }
+
+      // ----- teaser: random project shots playing above the Work sign, before you click -----
+      const teaser = { el: null, items: [], bag: [], cur: null, flip: 0, last: 0, h: 0, busy: false };
+      function buildTeaser(list) {
+        const projs = [...document.querySelectorAll('.proj')];
+        teaser.items = list.map(t => {
+          const p = projs.find(p => (p.dataset.media || '').split(',').includes(t.src));
+          return p && {
+            thumb: t.thumb, proj: p,
+            no: p.querySelector('.proj-no').textContent.trim(),
+            title: p.querySelector('.proj-title').textContent.split('—')[0].trim(),
+          };
+        }).filter(Boolean);
+        if (!teaser.items.length || !signs.work) return;
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'teaser';
+        el.setAttribute('aria-label', 'Project preview: open Selected Work');
+        el.innerHTML = `
+          <div class="teaser-bar mono"><span><i></i>Live<b class="tlong"> // project feed</b></span><span class="tcount"></span></div>
+          <div class="teaser-stage"><img alt=""><img alt=""><div class="teaser-flash"></div></div>
+          <div class="teaser-cap mono"><span class="tno"></span><span class="ttitle"></span><span class="topen">Open ▸</span></div>`;
+        el.addEventListener('click', () => { if (!suppressClick) open('work', teaser.cur && teaser.cur.proj); });
+        el.addEventListener('pointerenter', () => { if (!touch) hover = 'work'; });
+        el.addEventListener('pointerleave', () => { if (hover === 'work') hover = null; });
+        signLayer.appendChild(el);
+        teaser.el = el;
+        teaser.h = el.offsetHeight;
+        teaserNext();
+      }
+      function teaserNext() {
+        if (teaser.busy) return;
+        if (!teaser.bag.length) {                     // shuffle-bag: random, no repeats until all shown
+          teaser.bag = teaser.items.slice().sort(() => Math.random() - 0.5);
+          if (teaser.bag.length > 1 && teaser.bag[teaser.bag.length - 1] === teaser.cur) teaser.bag.unshift(teaser.bag.pop());
+        }
+        const it = teaser.bag.pop();
+        teaser.busy = true;
+        const pre = new Image();
+        pre.src = it.thumb;
+        (pre.decode ? pre.decode() : Promise.resolve()).catch(() => {}).then(() => {
+          teaser.busy = false;
+          teaser.last = performance.now();
+          const [a, b] = teaser.el.querySelectorAll('.teaser-stage img');
+          const front = teaser.flip ? a : b, back = teaser.flip ? b : a;
+          teaser.flip ^= 1;
+          front.src = it.thumb;
+          front.classList.remove('show');
+          void front.offsetWidth;                      // restart the slow zoom
+          front.classList.add('show');
+          back.classList.remove('show');
+          const flash = teaser.el.querySelector('.teaser-flash');
+          flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
+          teaser.cur = it;
+          teaser.el.querySelector('.tno').textContent = it.no;
+          teaser.el.querySelector('.ttitle').textContent = it.title;
+          teaser.el.querySelector('.tcount').textContent =
+            `${String(teaser.items.indexOf(it) + 1).padStart(2, '0')}/${String(teaser.items.length).padStart(2, '0')}`;
+        });
+      }
+      function updateTeaser(now) {
+        if (!teaser.el) return;
+        const s = signs.work, show = !openSec;
+        teaser.el.classList.toggle('on', show);
+        if (!show) { teaser.el.style.visibility = 'hidden'; return; }
+        if (!teaser.h) teaser.h = teaser.el.offsetHeight;
+        const pitch = s.pitch + s.halfH + (22 + teaser.h / 2) / pxPerRad();
+        place(teaser.el, s.yaw, pitch, 1, 1);
+        // only cycle (and download) while it's actually in view
+        const inView = project(s.yaw, pitch).th < fov * 0.5;
+        if (inView && now - teaser.last > (reduceMotion ? 4500 : 2600)) teaserNext();
+      }
+
+      const HREF = { '#profile': 'profile', '#work': 'work', '#experience': 'experience', '#stack': 'stack', '#certifications': 'certified', '#contact': 'contact' };
+      const navLinks = [...document.querySelectorAll('#nav a')];
+      function setActiveNav(id) {
+        navLinks.forEach(a => a.classList.toggle('active', HREF[a.getAttribute('href')] === id));
+      }
+      // In 3D, in-page links turn you to the matching sign instead of scrolling.
+      document.addEventListener('click', e => {
+        if (!isWorld()) return;
+        const a = e.target.closest('a[href^="#"]');
+        if (!a) return;
+        const href = a.getAttribute('href');
+        if (href === '#top') { e.preventDefault(); close(); if (signs.hero) turnTo(signs.hero.yaw, 0.1); }
+        else if (HREF[href]) { e.preventDefault(); open(HREF[href]); }
+      });
+
+      // ----- input: drag / swipe, wheel, keys -----
+      let turn = null, drag = null, suppressClick = false, lastInput = performance.now();
+      const vel = { yaw: 0, pitch: 0 };
+      function turnTo(yaw, pitch, dur = 1000) {
+        turn = { y0: view.yaw, dy: wrapAngle(yaw - view.yaw), p0: view.pitch, dp: pitch - view.pitch, t0: performance.now(), dur: reduceMotion ? 1 : dur };
+        vel.yaw = vel.pitch = 0;
+        lastInput = performance.now();      // any deliberate turn pauses the idle drift
+      }
+
+      stage.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('.wcard, .wclose')) return;
+        drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0, last: performance.now(), captured: false, bg: e.target === stage || e.target === signLayer || e.target === cardLayer };
+        suppressClick = false;
+        lastInput = performance.now();
+      });
+      stage.addEventListener('pointermove', e => {
+        if (!drag || e.pointerId !== drag.id) return;
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        drag.x = e.clientX; drag.y = e.clientY;
+        drag.moved += Math.abs(dx) + Math.abs(dy);
+        if (!drag.captured) {
+          if (drag.moved < 6) return;
+          stage.setPointerCapture(e.pointerId);
+          drag.captured = suppressClick = true;
+          stage.classList.add('dragging');
+          turn = null;
+          hideHint();
+        }
+        const k = 1 / pxPerRad(), now = performance.now(), dt = Math.max(8, now - drag.last) / 1000;
+        view.yaw = wrapAngle(view.yaw - dx * k);
+        view.pitch = clamp(view.pitch + dy * k, -1.0, 1.1);
+        vel.yaw = vel.yaw * 0.5 + (-dx * k / dt) * 0.5;
+        vel.pitch = vel.pitch * 0.5 + (dy * k / dt) * 0.5;
+        drag.last = lastInput = now;
+      });
+      function endDrag(e) {
+        if (!drag || e.pointerId !== drag.id) return;
+        if (!drag.captured && drag.bg && e.type === 'pointerup') close();   // click on empty space
+        if (drag.captured && stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+        if (performance.now() - drag.last > 90) vel.yaw = vel.pitch = 0;   // held still before letting go
+        stage.classList.remove('dragging');
+        drag = null;
+        setTimeout(() => { suppressClick = false; }, 0);
+      }
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
+      stage.addEventListener('wheel', e => {
+        const c = e.target.closest('.wcard');
+        if (c && c.scrollHeight > c.clientHeight) return;      // let a long panel scroll
+        e.preventDefault();
+        const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? cssH : 1;
+        const d = (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * unit;
+        turn = null; vel.yaw = vel.pitch = 0;
+        view.yaw = wrapAngle(view.yaw + d * 0.0016);
+        lastInput = performance.now();
+        hideHint();
+      }, { passive: false });
+      addEventListener('keydown', e => {
+        if (!isWorld() || !dataReady || e.target.closest('input, textarea, select')) return;
+        if (e.key === 'Escape') { close(); return; }
+        if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        const dir = e.key === 'ArrowRight' ? 1 : -1;
+        let best = null, bd = Infinity;
+        order.forEach(s => { const d = wrapAngle(s.yaw - view.yaw) * dir; if (d > 0.08 && d < bd) { bd = d; best = s; } });
+        if (!best) return;
+        e.preventDefault();
+        if (openSec) open(best.id); else turnTo(best.yaw, 0.1, 800);
+        hideHint();
+      });
+
+      // ----- hint + compass -----
+      let hintTimer = 0;
+      function showHint(text, ms) {
+        hintText.textContent = text;
+        hint.classList.remove('gone');
+        clearTimeout(hintTimer);
+        if (ms) hintTimer = setTimeout(hideHint, ms);
+      }
+      function hideHint() { if (dataReady && texReady) hint.classList.add('gone'); }
+
+      const ticks = [], labels = [];
+      function buildCompass() {
+        for (let d = 0; d < 360; d += 5) {
+          const t = document.createElement('i');
+          t.className = 'tick' + (d % 45 === 0 ? ' major' : d % 15 === 0 ? ' mid' : '');
+          strip.appendChild(t);
+          ticks.push([t, d * DEG]);
+        }
+        order.forEach(s => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'clabel mono';
+          b.textContent = NAMES[s.id];
+          b.addEventListener('click', () => open(s.id));
+          strip.appendChild(b);
+          labels.push([b, s]);
+        });
+      }
+      function updateCompass() {
+        const w = strip.clientWidth, k = Math.max(2.4, w / 190) / DEG;   // px per radian on the strip
+        for (const [t, a] of ticks) {
+          const x = wrapAngle(a - view.yaw) * k;
+          t.style.visibility = Math.abs(x) > w / 2 ? 'hidden' : '';
+          t.style.transform = `translateX(${(w / 2 + x).toFixed(1)}px)`;
+        }
+        let near = null, nd = 0.3;
+        for (const [b, s] of labels) {
+          const da = wrapAngle(s.yaw - view.yaw), x = da * k;
+          b.style.visibility = Math.abs(x) > w / 2 + 60 ? 'hidden' : '';
+          b.style.transform = `translateX(calc(${(w / 2 + x).toFixed(1)}px - 50%))`;
+          if (openSec ? s.id === openSec.id : Math.abs(da) < nd) { nd = Math.abs(da); near = b; }
+          b.classList.remove('active');
+        }
+        if (near) near.classList.add('active');
+        hdg.textContent = 'HDG ' + String(Math.round(((view.yaw / DEG) % 360 + 360) % 360)).padStart(3, '0') + '°';
+      }
+
+      function place(el, yaw, pitch, sc, alpha) {
+        const p = project(yaw, pitch);
+        const vis = p.th < fov * 0.5 + 0.7;
+        el.style.visibility = vis ? '' : 'hidden';
+        if (!vis) return;
+        el.style.transform = `translate3d(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px, 0) translate(-50%, -50%) scale(${sc.toFixed(3)})`;
+        el.style.opacity = alpha.toFixed(3);
+      }
+
+      // ----- 2D mode steering (scroll + mouse) -----
+      const look = { x: 0, y: 0 };
       addEventListener('pointermove', e => {
         look.x = e.clientX / innerWidth * 2 - 1;
         look.y = e.clientY / innerHeight * 2 - 1;
       }, { passive: true });
+      let classicBase = 0;
 
-      const deg = v => ((v * 180 / Math.PI) % 360 + 360) % 360;
-      let ready = false, t0 = performance.now(), lastReadout = 0;
-      function draw(now) {
+      // ----- frame loop -----
+      const t0 = performance.now();
+      let last = t0, lastReadout = 0;
+      function frame(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
         const t = reduceMotion ? 0 : (now - t0) / 1000;
-        const max = Math.max(1, root.scrollHeight - innerHeight);
-        const s = scrollY / max;
-        const yaw = t * 0.02 + s * 2.4 + (reduceMotion ? 0 : look.x * 0.14);
-        const pitch = 0.05 + s * 0.16 - (reduceMotion ? 0 : look.y * 0.07);
-        const ease = reduceMotion ? 1 : 0.05;
-        cur.yaw += (yaw - cur.yaw) * ease;
-        cur.pitch += (pitch - cur.pitch) * ease;
+        if (isWorld()) {
+          if (turn) {
+            const a = clamp((now - turn.t0) / turn.dur, 0, 1), e = easeInOut(a);
+            view.yaw = wrapAngle(turn.y0 + turn.dy * e);
+            view.pitch = turn.p0 + turn.dp * e;
+            if (a >= 1) turn = null;
+          } else if (!drag) {
+            if (Math.abs(vel.yaw) + Math.abs(vel.pitch) > 0.002) {        // fling inertia
+              view.yaw = wrapAngle(view.yaw + vel.yaw * dt);
+              view.pitch = clamp(view.pitch + vel.pitch * dt, -1.0, 1.1);
+              const f = Math.exp(-dt * 4);
+              vel.yaw *= f; vel.pitch *= f;
+            } else if (!openSec && !reduceMotion && now - lastInput > 8000) {
+              view.yaw = wrapAngle(view.yaw + 0.03 * dt);               // idle drift
+            }
+          }
+        } else {
+          const max = Math.max(1, html.scrollHeight - innerHeight), s = scrollY / max;
+          const yaw = classicBase + t * 0.02 + s * 2.4 + (reduceMotion ? 0 : look.x * 0.14);
+          const pitch = 0.05 + s * 0.16 - (reduceMotion ? 0 : look.y * 0.07);
+          const k = reduceMotion ? 1 : 0.05;
+          view.yaw += (yaw - view.yaw) * k;
+          view.pitch += (pitch - view.pitch) * k;
+        }
+
+        // sign highlight + dimming
+        const want = isWorld() ? (hover || (openSec && openSec.id)) : null;
+        if (want) hiId = want;
+        hiAmt += ((hover ? 1 : openSec && isWorld() ? 0.45 : 0) - hiAmt) * 0.15;
+        dimAmt += ((openSec && isWorld() ? 1 : 0) - dimAmt) * 0.08;
+        const hs = hiId && signs[hiId];
+
         gl.uniform1f(U.uTime, t);
-        gl.uniform1f(U.uYaw, cur.yaw);
-        gl.uniform1f(U.uPitch, cur.pitch);
+        gl.uniform1f(U.uYaw, view.yaw);
+        gl.uniform1f(U.uPitch, view.pitch);
         gl.uniform1f(U.uFx, reduceMotion ? 0 : 1);
+        gl.uniform4f(U.uHi, hs ? hs.yaw : 0, hs ? hs.pitch : 0, hs ? hs.halfW : 0, hs ? hs.halfH : 0);
+        gl.uniform1f(U.uHiAmt, hs ? hiAmt : 0);
+        gl.uniform1f(U.uDim, dimAmt);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
-        if (readout && now - lastReadout > 100) {
+
+        if (isWorld() && dataReady) {
+          order.forEach(s => placeSign(signEls[s.id], s));
+          updateTeaser(now);
+          if (openSec) {
+            const s = signs[openSec.id], age = now - openedAt;
+            openSec.cards.forEach((c, i) => {
+              const slot = openSec.slots[i];
+              if (!slot) return;
+              const a = reduceMotion ? 1 : clamp((age - i * 70) / 650, 0, 1), e = easeOut(a);
+              place(c, s.yaw + wrapAngle(slot.yaw - s.yaw) * e, s.pitch + (slot.pitch - s.pitch) * e, 0.8 + 0.2 * e, a);
+            });
+            if (cssW < 760) {     // narrow screens: the sign is often off-screen, so pin Close at the top
+              closeBtn.style.visibility = '';
+              closeBtn.style.opacity = 1;
+              closeBtn.style.transform = `translate3d(${cssW / 2}px, 96px, 0) translate(-50%, -50%)`;
+            } else place(closeBtn, s.yaw, s.pitch + s.halfH + 3.5 * DEG, 1, 1);
+          }
+          updateCompass();
+        } else if (!isWorld() && readout && now - lastReadout > 100) {
           lastReadout = now;
-          const p = cur.pitch * 180 / Math.PI;
-          readout.textContent = `YAW ${deg(cur.yaw).toFixed(1).padStart(5, '0')}° · PITCH ${p < 0 ? '−' : '+'}${Math.abs(p).toFixed(1).padStart(4, '0')}°`;
+          const p = view.pitch / DEG, y = ((view.yaw / DEG) % 360 + 360) % 360;
+          readout.textContent = `YAW ${y.toFixed(1).padStart(5, '0')}° · PITCH ${p < 0 ? '−' : '+'}${Math.abs(p).toFixed(1).padStart(4, '0')}°`;
+        }
+        if (!lost) requestAnimationFrame(frame);
+      }
+
+      // ----- switching modes -----
+      let classicScroll = 0;
+      function enterWorld() {
+        html.classList.add('world');
+        resize();
+        updateScrim();
+        setModeLabel();
+        if (dataReady && texReady) {
+          html.classList.add('world-ready');
+          showHint(touch ? 'Swipe to look around · Tap a sign' : 'Drag to look around · Click a sign', 9000);
         }
       }
-      function loop(now) { if (!lost) { draw(now); requestAnimationFrame(loop); } }
+      function exitWorld() {
+        close();
+        autoOpened.splice(0).forEach(p => p.querySelector('.proj-head').click());
+        borrowed.splice(0).forEach(([n, mark]) => mark.replaceWith(n));
+        Object.values(secs).forEach(sec => sec.cards.forEach(c => c.remove()));
+        Object.keys(secs).forEach(k => delete secs[k]);
+        html.classList.remove('world', 'world-ready');
+        resize();
+        scrollTo(0, classicScroll);
+        const max = Math.max(1, html.scrollHeight - innerHeight);
+        classicBase = view.yaw - ((reduceMotion ? 0 : (performance.now() - t0) / 1000) * 0.02 + scrollY / max * 2.4);
+        updateScrim();
+        setModeLabel();
+      }
+      modeBtn.addEventListener('click', () => {
+        const toWorld = !isWorld();
+        try { localStorage.setItem('view', toWorld ? '3d' : '2d'); } catch (e) {}
+        if (toWorld) { classicScroll = scrollY; view.yaw = signs.hero ? signs.hero.yaw : 0; view.pitch = 0.1; enterWorld(); }
+        else exitWorld();
+      });
 
+      // ----- loading -----
+      let lost = false;
+      canvas.addEventListener('webglcontextlost', e => {
+        e.preventDefault(); lost = true;
+        wrap.classList.remove('ready'); wrap.classList.add('flat');
+        if (isWorld()) exitWorld();
+        modeBtn.hidden = true;
+      });
+      addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(frame);
+
+      function maybeReady() {
+        if (!(dataReady && texReady)) return;
+        if (isWorld()) enterWorld();
+      }
       function upload(img) {
         gl.bindTexture(gl.TEXTURE_2D, tex);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, img);
-        if (!ready) {
-          ready = true;
-          resize();
-          if (reduceMotion) { draw(performance.now()); addEventListener('scroll', () => draw(performance.now()), { passive: true }); }
-          else requestAnimationFrame(loop);
+        if (!texReady) {
+          texReady = true;
           requestAnimationFrame(() => wrap.classList.add('ready'));
-        } else if (reduceMotion) draw(performance.now());
+          maybeReady();
+        }
       }
       function load(src) {
         return new Promise((res, rej) => {
@@ -1286,20 +2024,31 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           img.src = src;
         });
       }
-
-      let lost = false;
-      canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; wrap.classList.remove('ready'); wrap.classList.add('flat'); });
-      addEventListener('resize', resize);
-
-      // 2K first (fast), then sharpen to 4K. The fisheye magnifies the middle of the
-      // image, so even phones benefit; skip it only on data-saver / very slow links.
+      // 2K first (fast), then sharpen to 4K. Skip 4K only on data-saver / very slow links.
       const conn = navigator.connection || {};
-      const wantBig = !conn.saveData && !/2g/.test(conn.effectiveType || '')
-        && gl.getParameter(gl.MAX_TEXTURE_SIZE) >= 4096;
+      const wantBig = !conn.saveData && !/2g/.test(conn.effectiveType || '') && gl.getParameter(gl.MAX_TEXTURE_SIZE) >= 4096;
       load('assets/bg/universe-2k.webp')
         .then(img => { upload(img); return wantBig ? load('assets/bg/universe-4k.webp') : null; })
         .then(img => { if (img && !lost) upload(img); })
-        .catch(() => { if (!ready) wrap.classList.add('flat'); });
+        .catch(() => { if (!texReady) { wrap.classList.add('flat'); fallbackTo2D(); } });
+
+      fetch('assets/bg/world.json')
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(data => {
+          data.signs.forEach(s => {
+            signs[s.id] = { id: s.id, yaw: wrapAngle(s.yaw * DEG), pitch: s.pitch * DEG, halfW: s.halfW * DEG, halfH: s.halfH * DEG };
+          });
+          order = Object.values(signs).sort((a, b) => ((a.yaw + TAU) % TAU) - ((b.yaw + TAU) % TAU));
+          buildSigns();
+          buildCompass();
+          dataReady = true;
+          if (signs.hero) view.yaw = signs.hero.yaw;
+          maybeReady();
+          // the teaser is a bonus: if it fails, the world still works
+          return fetch('assets/thumbs/teaser.json').then(r => r.ok ? r.json() : [])
+            .then(list => { try { buildTeaser(list); } catch (e) { console.warn('teaser:', e); } }, () => {});
+        })
+        .catch(err => { console.warn('world:', err); fallbackTo2D(); });
     })();
   </script>
 </body>

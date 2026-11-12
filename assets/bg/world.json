@@ -1,0 +1,53 @@
+{
+ "signs": [
+  {
+   "id": "profile",
+   "yaw": 49,
+   "pitch": 4.578,
+   "halfW": 12.784,
+   "halfH": 6.904
+  },
+  {
+   "id": "work",
+   "yaw": 99,
+   "pitch": 4.578,
+   "halfW": 20.515,
+   "halfH": 6.904
+  },
+  {
+   "id": "stack",
+   "yaw": 156,
+   "pitch": 4.578,
+   "halfW": 19.895,
+   "halfH": 6.904
+  },
+  {
+   "id": "experience",
+   "yaw": 209,
+   "pitch": 4.578,
+   "halfW": 16.513,
+   "halfH": 6.904
+  },
+  {
+   "id": "certified",
+   "yaw": 258,
+   "pitch": 4.578,
+   "halfW": 15.417,
+   "halfH": 6.904
+  },
+  {
+   "id": "contact",
+   "yaw": 307,
+   "pitch": 4.578,
+   "halfW": 16.963,
+   "halfH": 6.904
+  },
+  {
+   "id": "hero",
+   "yaw": 0,
+   "pitch": 7.784,
+   "halfW": 19.32,
+   "halfH": 11.87
+  }
+ ]
+}
