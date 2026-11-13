@@ -211,6 +211,28 @@
       scrollbar-width: thin; scrollbar-color: var(--accent) transparent;
     }
     .wcard.on { display: block; }
+
+    /* project panels: click to zoom into focus */
+    .wcard.zoomable:not(.focus) .wcard-body { cursor: zoom-in; }
+    .wzoom { margin-left: auto; margin-right: 14px; padding: 0 8px; border: 1px solid currentColor; color: var(--bg); font-size: 11px; }
+    .wzoom:hover { background: var(--bg); color: var(--ink); }
+    .wcard.focus {
+      z-index: 10; width: min(1180px, 94vw); max-height: calc(100dvh - 150px);
+      border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 40px 120px rgba(0, 0, 0, 0.8);
+      animation: zoom-in .35s cubic-bezier(.2, .8, .2, 1);
+    }
+    @keyframes zoom-in { from { scale: 0.86; opacity: 0.3; } to { scale: 1; opacity: 1; } }
+    .wcard.focus .wcard-body { padding: 24px 28px 28px; }
+    .wcard.focus .proj-title { font-size: clamp(26px, 3vw, 40px); }
+    @media (min-width: 900px) {
+      .wcard.focus .proj-inner { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+    }
+    .focus-backdrop {
+      position: absolute; inset: 0; z-index: 9; display: none; cursor: zoom-out;
+      background: rgba(8, 8, 7, 0.62); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    }
+    .focus-backdrop.on { display: block; }
+    @media (prefers-reduced-motion: reduce) { .wcard.focus { animation: none; } }
     .wcard-bar {
       position: sticky; top: 0; z-index: 2;
       display: flex; justify-content: space-between; gap: 12px;
@@ -1672,12 +1694,49 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           card([$('#profile .edu')], ['[ 01 ] Education', '02/03'], 380),
           card([$('#profile .langs')], ['[ 01 ] Languages', '03/03'], 360),
         ],
-        work: () => $$('#work .proj').map((p, i) => card([p], ['[ 02 ] Selected work', `P—0${i + 1}`], 500)),
+        work: () => $$('#work .proj').map((p, i) => zoomable(card([p], ['[ 02 ] Selected work', `P—0${i + 1}`], 500))),
         stack: () => $$('#stack .stack-cell').map((c, i, all) => card([c], ['[ 04 ] Stack & skills', `${i + 1}/${all.length}`], 300)),
         experience: () => $$('#experience .xp').map((x, i) => card([x], ['[ 03 ] Experience', `E—0${i + 1}`], 440)),
         certified: () => $$('#certifications .cert').map((c, i) => card([c], ['[ 04.1 ] Certified', `C—0${i + 1}`], 340)),
         contact: () => [card([$('#contact h2'), $('#contact .contact-grid')], ['[ 05 ] Contact', 'Open channel'], 470, 'wcard-contact')],
       };
+
+      // ----- focus mode: a panel zooms to the centre, the world dims behind it -----
+      let focused = null;
+      const backdrop = document.createElement('div');
+      backdrop.className = 'focus-backdrop';
+      cardLayer.appendChild(backdrop);
+      backdrop.addEventListener('click', () => unfocus());
+      function zoomable(c) {
+        c.classList.add('zoomable');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wzoom mono';
+        btn.textContent = '⤢ Zoom';
+        btn.addEventListener('click', e => { e.stopPropagation(); focused === c ? unfocus() : focusCard(c); });
+        c.querySelector('.wcard-bar').insertBefore(btn, c.querySelector('.wcard-bar span:last-child'));
+        c.addEventListener('click', e => {        // a click anywhere that isn't a control zooms in
+          if (focused !== c && !e.target.closest('a, button, video, .viewer-ctrl')) focusCard(c);
+        });
+        return c;
+      }
+      function focusCard(c) {
+        if (focused) unfocus();
+        focused = c;
+        c.classList.add('focus');
+        c.querySelector('.wzoom').textContent = '✕ Exit';
+        c.scrollTop = 0;
+        backdrop.classList.add('on');
+        closeBtn.style.visibility = 'hidden';
+        hideHint();
+      }
+      function unfocus() {
+        if (!focused) return;
+        focused.classList.remove('focus');
+        focused.querySelector('.wzoom').textContent = '⤢ Zoom';
+        focused = null;
+        backdrop.classList.remove('on');
+      }
 
       // Arrange a section's cards in columns either side of its sign: right, left, right…
       function layout(sec) {
@@ -1735,6 +1794,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         setActiveNav(id);
       }
       function close() {
+        unfocus();
         if (!openSec) return;
         const sec = openSec;
         openSec = null;
@@ -1849,7 +1909,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       }
 
       stage.addEventListener('pointerdown', e => {
-        if (e.button !== 0 || e.target.closest('.wcard, .wclose')) return;
+        if (e.button !== 0 || focused || e.target.closest('.wcard, .wclose')) return;
         drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0, last: performance.now(), captured: false, bg: e.target === stage || e.target === signLayer || e.target === cardLayer };
         suppressClick = false;
         lastInput = performance.now();
@@ -1887,6 +1947,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       stage.addEventListener('pointercancel', endDrag);
       stage.addEventListener('wheel', e => {
         const c = e.target.closest('.wcard');
+        if (focused) { if (!c) e.preventDefault(); return; }   // zoomed: only the panel scrolls
         if (c && c.scrollHeight > c.clientHeight) return;      // let a long panel scroll
         e.preventDefault();
         const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? cssH : 1;
@@ -1898,8 +1959,14 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       }, { passive: false });
       addEventListener('keydown', e => {
         if (!isWorld() || !dataReady || e.target.closest('input, textarea, select')) return;
-        if (e.key === 'Escape') { close(); return; }
+        if (e.key === 'Escape') { focused ? unfocus() : close(); return; }
         if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+        if (focused && openSec) {                  // zoomed: step through the projects
+          const list = openSec.cards, i = list.indexOf(focused);
+          e.preventDefault();
+          focusCard(list[(i + (e.key === 'ArrowRight' ? 1 : -1) + list.length) % list.length]);
+          return;
+        }
         const dir = e.key === 'ArrowRight' ? 1 : -1;
         let best = null, bd = Infinity;
         order.forEach(s => { const d = wrapAngle(s.yaw - view.yaw) * dir; if (d > 0.08 && d < bd) { bd = d; best = s; } });
@@ -2029,10 +2096,17 @@ Learning: Japanese, Mandarin, Korean, Indonesian
             openSec.cards.forEach((c, i) => {
               const slot = openSec.slots[i];
               if (!slot) return;
+              if (c === focused) {                 // zoomed: pinned to the centre of the screen
+                c.style.visibility = '';
+                c.style.opacity = 1;
+                c.style.transform = `translate3d(${cssW / 2}px, ${(cssH + 2) / 2}px, 0) translate(-50%, -50%)`;
+                return;
+              }
               const a = reduceMotion ? 1 : clamp((age - i * 70) / 650, 0, 1), e = easeOut(a);
               place(c, s.yaw + wrapAngle(slot.yaw - s.yaw) * e, s.pitch + (slot.pitch - s.pitch) * e, 0.8 + 0.2 * e, a);
             });
-            if (cssW < 760) {     // narrow screens: the sign is often off-screen, so pin Close at the top
+            if (focused) closeBtn.style.visibility = 'hidden';
+            else if (cssW < 760) {     // narrow screens: the sign is often off-screen, so pin Close at the top
               closeBtn.style.visibility = '';
               closeBtn.style.opacity = 1;
               closeBtn.style.transform = `translate3d(${cssW / 2}px, 96px, 0) translate(-50%, -50%)`;
