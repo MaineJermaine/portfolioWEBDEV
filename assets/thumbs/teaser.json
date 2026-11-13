@@ -138,5 +138,17 @@
  {
   "src": "nikobot.png",
   "thumb": "assets/thumbs/nikobot.webp"
+ },
+ {
+  "src": "TENSAKU1.png",
+  "thumb": "assets/thumbs/TENSAKU1.webp"
+ },
+ {
+  "src": "TENSAKU2.png",
+  "thumb": "assets/thumbs/TENSAKU2.webp"
+ },
+ {
+  "src": "TENSAKU3.png",
+  "thumb": "assets/thumbs/TENSAKU3.webp"
  }
 ]

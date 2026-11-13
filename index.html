@@ -971,6 +971,32 @@
             </div></div>
           </article>
 
+          <article class="proj reveal" data-media="TENSAKU1.png,TENSAKU2.png,TENSAKU3.png">
+            <button class="proj-head" type="button" aria-expanded="false">
+              <span class="proj-no mono">P—08</span>
+              <span class="proj-title">Tensaku — Japanese Chat Checker</span>
+              <span class="proj-type mono">Personal project · Claude artifact</span>
+              <span class="proj-toggle" aria-hidden="true"></span>
+            </button>
+            <div class="proj-body"><div>
+              <div class="proj-inner">
+                <div class="spacer"></div>
+                <div class="proj-copy">
+                  <a class="btn btn-solid demo-btn" href="https://claude.ai/artifact/RZFq3kAbTHvwAtrNyuUyS1" target="_blank" rel="noopener"><span class="play" aria-hidden="true"></span>Try Tensaku!</a>
+                  <ul>
+                    <li>Built a mobile-first, offline-capable web app that checks Japanese chat messages for grammar, politeness level, tone and dialect as you type, so Kansai dialect and chat slang aren't marked as errors.</li>
+                    <li>Wrote 345 grammar and register rules in 12 groups that score grammar separately from appropriateness, with a five-level register meter judged against who you're talking to.</li>
+                    <li>Built a Python pipeline turning JMdict and KANJIDIC into a 137,700-word dictionary with usage tags, plus a text reader that handles real chat spelling, furigana and 73 hand-written double-meaning notes.</li>
+                    <li>Integrated Claude for translation, intended-meaning checks and conversation-aware feedback on whether a reply fits, with clean fallbacks when offline or rate-limited.</li>
+                    <li>Tested with Playwright at phone size, a rule regression suite, and before-and-after comparisons over about 2,200 sentences.</li>
+                  </ul>
+                  <div class="chips mono"><span class="chip">JavaScript</span><span class="chip">Python</span><span class="chip">Claude API</span><span class="chip">NLP</span><span class="chip">Playwright</span><span class="chip">Mobile-first</span></div>
+                </div>
+                <div class="media"></div>
+              </div>
+            </div></div>
+          </article>
+
         </div>
       </div>
     </section>
@@ -1176,6 +1202,11 @@ NYP Badminton CCA Website — UX Design / Web Demo
 
 Discord Admin Bot — Python
 • Built a Discord administration bot with blacklist filtering, kick/ban commands, member verification and automated greetings; deployed to run 24/7.
+
+Tensaku — Japanese Chat Checker (Personal Project)
+• Offline-first web app checking Japanese chat messages for grammar, register, tone and dialect, with 345 hand-written rules and a 137,700-word dictionary built from JMdict.
+• Integrated Claude for translation, intended-meaning checks and conversation-aware reply feedback; tested with Playwright and a rule regression suite.
+• Try it: https://claude.ai/artifact/RZFq3kAbTHvwAtrNyuUyS1
 
 EXPERIENCE
 ----------
