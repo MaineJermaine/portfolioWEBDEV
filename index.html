@@ -430,6 +430,10 @@
       letter-spacing: -0.01em;
     }
     .lede mark { background: none; color: var(--accent); }
+    .avatar {
+      width: 112px; height: 112px; object-fit: cover; margin-bottom: 28px;
+      border: 1px solid var(--line-strong); box-shadow: 6px 6px 0 var(--accent);
+    }
     .lede .muted { color: var(--muted); }
     .block-label { display: flex; align-items: center; gap: 10px; color: var(--muted); margin-bottom: 18px; }
     .block-label::before { content: ''; width: 18px; height: 1px; background: var(--accent); }
@@ -749,6 +753,7 @@
 
         <div class="profile-grid">
           <div class="reveal">
+            <img class="avatar" src="DIALYN.jpg" alt="Azri's avatar" width="112" height="112" loading="lazy">
             <p class="lede">
               Information Technology student at Nanyang Polytechnic with experience in <mark>web development</mark>, <mark>game programming</mark> and <mark>UI/UX design</mark>.
               <span class="muted">Skilled in Python, JavaScript, Luau and SQL, with academic knowledge of full-stack development, data structures and algorithms, and AWS cloud computing. Passionate about developing functional, intuitive software and solving technical problems.</span>
@@ -913,6 +918,53 @@
                     <li>Created a multidirectional gravity system that shifts the player's orientation based on the surface they touch.</li>
                   </ul>
                   <div class="chips mono"><span class="chip">Luau</span><span class="chip">Roblox Studio</span><span class="chip">Game systems</span></div>
+                </div>
+                <div class="media"></div>
+              </div>
+            </div></div>
+          </article>
+
+          <article class="proj reveal" data-media="UXWEBSITE1.png,https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/UXwebsite.mp4">
+            <button class="proj-head" type="button" aria-expanded="false">
+              <span class="proj-no mono">P—06</span>
+              <span class="proj-title">NYP Badminton CCA Website</span>
+              <span class="proj-type mono">UX design · web demo</span>
+              <span class="proj-toggle" aria-hidden="true"></span>
+            </button>
+            <div class="proj-body"><div>
+              <div class="proj-inner">
+                <div class="spacer"></div>
+                <div class="proj-copy">
+                  <ul>
+                    <li>Designed a web portal that serves as a digital hub for the Nanyang Polytechnic Badminton CCA's players and student-athletes.</li>
+                    <li>Laid out the CCA's organisational structure, introducing the teachers-in-charge and student leaders.</li>
+                    <li>Built a History Gallery celebrating past victories and training sessions.</li>
+                  </ul>
+                  <div class="chips mono"><span class="chip">UI/UX</span><span class="chip">HTML</span><span class="chip">CSS</span><span class="chip">Figma</span></div>
+                </div>
+                <div class="media"></div>
+              </div>
+            </div></div>
+          </article>
+
+          <article class="proj reveal" data-media="nikobot.png">
+            <button class="proj-head" type="button" aria-expanded="false">
+              <span class="proj-no mono">P—07</span>
+              <span class="proj-title">Discord Admin Bot</span>
+              <span class="proj-type mono">Python · bot deployment</span>
+              <span class="proj-toggle" aria-hidden="true"></span>
+            </button>
+            <div class="proj-body"><div>
+              <div class="proj-inner">
+                <div class="spacer"></div>
+                <div class="proj-copy">
+                  <ul>
+                    <li>Built a fully functional Discord administration bot in Python with blacklist filtering.</li>
+                    <li>Implemented server moderation features, including user kick and ban commands.</li>
+                    <li>Developed a member verification system with automated greeting messages.</li>
+                    <li>Deployed the bot to run 24/7 with stable, reliable uptime.</li>
+                  </ul>
+                  <div class="chips mono"><span class="chip">Python</span><span class="chip">Discord API</span><span class="chip">PyCharm</span><span class="chip">Deployment</span></div>
                 </div>
                 <div class="media"></div>
               </div>
@@ -1118,6 +1170,12 @@ WhatsApp Sales Automation & CRM Dashboard — UI/UX Designer & Developer
 • Developed an administrative dashboard featuring customer analytics, lead management, and conversation monitoring.
 • Implemented CRUD functionality, customer filtering, tagging, and chat transfer features.
 • Designed interfaces for AI-assisted auto-replies and response template management.
+
+NYP Badminton CCA Website — UX Design / Web Demo
+• Designed a web portal serving as a digital hub for the CCA's players and student-athletes, with its organisational structure, leaders and a History Gallery.
+
+Discord Admin Bot — Python
+• Built a Discord administration bot with blacklist filtering, kick/ban commands, member verification and automated greetings; deployed to run 24/7.
 
 EXPERIENCE
 ----------
@@ -1579,7 +1637,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           card([$('.spec')], null, 380, 'bare'),
         ],
         profile: () => [
-          card([$('#profile .lede')], ['[ 01 ] Profile', '01/03'], 440),
+          card([$('#profile .avatar'), $('#profile .lede')], ['[ 01 ] Profile', '01/03'], 440),
           card([$('#profile .edu')], ['[ 01 ] Education', '02/03'], 380),
           card([$('#profile .langs')], ['[ 01 ] Languages', '03/03'], 360),
         ],
