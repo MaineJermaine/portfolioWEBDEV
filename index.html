@@ -1518,15 +1518,156 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         uniform vec2 uRes;
         uniform float uTime, uYaw, uPitch, uFov, uFx, uHiAmt, uDim;
         uniform vec4 uHi;   // highlighted sign: yaw, pitch, half width, half height (radians)
+        uniform vec4 uCore; // live core: centre (x right, y up, z forward) + radius; w = 0 until loaded
+        uniform float uFloor, uLive;
 
-        // fisheye ray for screen direction n at angle th from the centre -> panorama uv
-        vec2 rayUv(vec2 n, float th) {
+        // fisheye ray for screen direction n at angle th from the centre -> world direction
+        vec3 rayDir(vec2 n, float th) {
           vec3 d = vec3(n * sin(th), cos(th));
           float cp = cos(uPitch), sp = sin(uPitch);
           d = vec3(d.x, d.y * cp + d.z * sp, d.z * cp - d.y * sp);
           float cy = cos(uYaw), sy = sin(uYaw);
-          d = vec3(d.x * cy + d.z * sy, d.y, d.z * cy - d.x * sy);
-          return vec2(atan(d.x, d.z) * 0.1591549 + 0.5, asin(clamp(d.y, -1.0, 1.0)) * 0.3183099 + 0.5);
+          return vec3(d.x * cy + d.z * sy, d.y, d.z * cy - d.x * sy);
+        }
+        vec2 dirUv(vec3 d) { return vec2(atan(d.x, d.z) * 0.1591549 + 0.5, asin(clamp(d.y, -1.0, 1.0)) * 0.3183099 + 0.5); }
+        vec2 rayUv(vec2 n, float th) { return dirUv(rayDir(n, th)); }
+
+        // ---------- live core + lightning (drawn on top of the still panorama) ----------
+        const vec3 ACCENT = vec3(1.0, 0.36, 0.12);
+        const vec3 EMBER = vec3(1.0, 0.69, 0.36);
+        const vec3 ELECTRIC = vec3(0.36, 0.78, 1.0);
+
+        float hash(float n) { return fract(sin(n * 12.9898) * 43758.5453); }
+        // piecewise-linear noise: straight runs with sharp kinks, like a lightning path
+        float kink(float x) { float i = floor(x); return mix(hash(i), hash(i + 1.0), fract(x)); }
+        float jag(float x, float s) {
+          return kink(x + s) * 0.55 + kink(x * 2.3 + s * 1.7) * 0.3 + kink(x * 5.1 + s * 3.3) * 0.15 - 0.5;
+        }
+        // flat coordinates around direction c (about radians near c), so bolts aren't stretched
+        vec2 plane(vec3 d, vec3 c) {
+          vec3 e1 = normalize(vec3(c.z, 0.0, -c.x));
+          vec3 e2 = cross(c, e1);
+          vec3 q = d / max(dot(d, c), 0.05);
+          return vec2(dot(q, e1), dot(q, e2));
+        }
+        float bend(float t, float L, float seed) { return jag(t * 9.0, seed) * L * 0.24 * sqrt(sin(3.14159 * t)); }
+        // brightness of one jagged bolt starting at a, heading ang, length L
+        float bolt(vec2 p, vec2 a, float ang, float L, float seed, float w) {
+          vec2 dir = vec2(cos(ang), sin(ang)), nrm = vec2(-dir.y, dir.x);
+          vec2 ap = p - a;
+          float t = dot(ap, dir) / L;
+          if (t < -0.03 || t > 1.03) return 0.0;
+          float tc = clamp(t, 0.0, 0.995);
+          float o1 = bend(tc, L, seed);
+          float slope = (bend(tc + 0.004, L, seed) - o1) / (0.004 * L);
+          float dist = abs(dot(ap, nrm) - o1) / sqrt(1.0 + slope * slope);
+          float ends = smoothstep(-0.03, 0.01, t) * (1.0 - smoothstep(0.97, 1.03, t));
+          return ((1.0 - smoothstep(w * 0.2, w, dist)) + exp(-dist / (w * 5.0)) * 0.3) * ends;
+        }
+        vec2 boltAt(vec2 a, float ang, float L, float seed, float t) {   // a point on the bolt, to fork from
+          vec2 dir = vec2(cos(ang), sin(ang));
+          return a + dir * (t * L) + vec2(-dir.y, dir.x) * bend(t, L, seed);
+        }
+        // a strike: bright stroke, flickering re-strikes, fade, then quiet until the next one
+        float strike(float i, float period, out float seed) {
+          float tt = uTime / period + i * 0.37;
+          float ph = fract(tt) * period;
+          seed = floor(tt) * 7.31 + i * 31.7;
+          if (hash(seed + 0.5) < 0.22 || ph > 0.55) return 0.0;   // some skipped: irregular rhythm
+          float flick = 0.35 + 0.65 * step(0.3, hash(floor(ph * 22.0) + seed));
+          return flick * (1.0 - ph / 0.55) * (ph < 0.06 ? 1.6 : 1.0);
+        }
+
+        float lines(vec3 p, float w) {     // 6 great circles = a geodesic wireframe ball
+          const float A = 0.5257311, B = 0.8506508;
+          float g = 1.0 - smoothstep(0.0, w, abs(dot(p, vec3(0.0, A, B))));
+          g = max(g, 1.0 - smoothstep(0.0, w, abs(dot(p, vec3(0.0, A, -B)))));
+          g = max(g, 1.0 - smoothstep(0.0, w, abs(dot(p, vec3(A, B, 0.0)))));
+          g = max(g, 1.0 - smoothstep(0.0, w, abs(dot(p, vec3(A, -B, 0.0)))));
+          g = max(g, 1.0 - smoothstep(0.0, w, abs(dot(p, vec3(B, 0.0, A)))));
+          g = max(g, 1.0 - smoothstep(0.0, w, abs(dot(p, vec3(B, 0.0, -A)))));
+          return g;
+        }
+        mat3 spin(float a, float b) {
+          float ca = cos(a), sa = sin(a), cb = cos(b), sb = sin(b);
+          return mat3(ca, 0.0, -sa, 0.0, 1.0, 0.0, sa, 0.0, ca) * mat3(1.0, 0.0, 0.0, 0.0, cb, sb, 0.0, -sb, cb);
+        }
+        float shell(vec3 d, vec3 C, float b, float h2, float R, mat3 rot, float w) {
+          float disc = R * R - h2;
+          if (disc <= 0.0) return 0.0;
+          float s = sqrt(disc);
+          vec3 pf = (d * (b - s) - C) / R, pb = (d * (b + s) - C) / R;
+          return (lines(rot * pf, w) + 0.35 * lines(rot * pb, w)) * (0.55 + 0.45 * smoothstep(0.0, 0.25, disc / (R * R)));
+        }
+        float ring(vec3 d, vec3 C, vec3 nrm, float Rr) {
+          float dn = dot(d, nrm);
+          if (abs(dn) < 1e-3) return 0.0;
+          float tq = dot(C, nrm) / dn;
+          if (tq <= 0.0) return 0.0;
+          float e = abs(length(d * tq - C) - Rr);
+          return 1.0 - smoothstep(0.0, 0.09, e) + exp(-e / 0.6) * 0.18;
+        }
+
+        vec3 liveCore(vec3 d) {
+          vec3 C = uCore.xyz;
+          float R0 = uCore.w, dist = length(C), t = uTime;
+          vec3 c = C / dist, col = vec3(0.0);
+          float b = dot(d, C);
+          vec3 perp = C - d * b;
+          float h2 = dot(perp, perp);
+          float rh = R0 * 0.2 * (1.0 + 0.3 * sin(t * 2.6 + 1.0) * uLive);       // heart pulse
+          if (dot(d, c) > 0.5) {                                                   // within 60° of the core
+            float breathe = 1.0 + 0.11 * sin(t * 1.3) * uLive;                    // expand / deflate
+            col += vec3(1.0, 0.82, 0.6) * (rh * rh / (h2 + rh * rh)) * 1.8;
+            col += ACCENT * exp(-sqrt(h2) / (R0 * 1.1)) * 0.22 * breathe;
+            col += ACCENT * 1.7 * shell(d, C, b, h2, R0 * breathe, spin(t * 0.35 * uLive + 0.6, 0.5 + 0.25 * sin(t * 0.21 * uLive)), 0.032);
+            col += ELECTRIC * 1.4 * shell(d, C, b, h2, R0 * 0.62 * (2.0 - breathe), spin(-t * 0.6 * uLive + 1.7, 1.1), 0.042);
+            for (int i = 0; i < 3; i++) {                                          // rings wobbling round it
+              float fi = float(i);
+              vec3 nrm = spin(t * (0.16 + 0.07 * fi) * uLive + fi * 2.1, 1.05 + 0.35 * fi + 0.12 * sin(t * 0.5 * uLive + fi)) * vec3(0.0, 1.0, 0.0);
+              float Rr = R0 * (1.3 + 0.14 * fi) * (1.0 + 0.05 * sin(t * 1.1 + fi * 1.9) * uLive);
+              col += (i == 1 ? EMBER : ACCENT) * ring(d, C, nrm, Rr) * 0.9;
+            }
+            vec2 p = plane(d, c);
+            float coreAng = R0 / dist;
+            for (int i = 0; i < 4; i++) {                                          // lightning out of the core
+              float fi = float(i), seed;
+              float on = strike(fi, 1.5 + fi * 0.47, seed) * uLive;
+              if (on <= 0.0) continue;
+              float ang = radians(mix(-15.0, 195.0, hash(seed + 2.0)));          // fan upwards, clear of the name
+              float L = 0.2 + 0.38 * hash(seed + 3.0);
+              vec2 a = vec2(cos(ang), sin(ang)) * coreAng * 0.55;
+              float br = bolt(p, a, ang, L, seed, 0.0026);
+              float fang = ang + radians(25.0 + 25.0 * hash(seed + 5.0)) * (hash(seed + 6.0) < 0.5 ? -1.0 : 1.0);
+              br += 0.7 * bolt(p, boltAt(a, ang, L, seed, 0.3 + 0.35 * hash(seed + 4.0)), fang, L * (0.3 + 0.25 * hash(seed + 7.0)), seed + 11.0, 0.0018);
+              col += mix(ELECTRIC, vec3(1.0), 0.55) * br * on * 1.6;
+              col += ELECTRIC * on * 0.05 * exp(-length(p) * 3.0);                // sky lights up around it
+              col += vec3(1.0, 0.85, 0.7) * on * 0.25 * (rh * rh * 4.0 / (h2 + rh * rh * 4.0));
+            }
+          }
+          for (int i = 0; i < 2; i++) {                                            // stray strikes elsewhere in the sky
+            float fi = float(i), seed;
+            float on = strike(fi + 7.0, 3.3 + fi * 1.4, seed) * uLive;
+            if (on <= 0.0) continue;
+            float lo = hash(seed + 8.0) * 6.2831853, la = radians(36.0 + 16.0 * hash(seed + 9.0));
+            vec3 c2 = vec3(sin(lo) * cos(la), sin(la), cos(lo) * cos(la));
+            if (dot(c2, c) > 0.6) c2 = vec3(-c2.x, c2.y, -c2.z);                 // keep away from the core
+            if (dot(d, c2) < 0.85) continue;
+            vec2 q = plane(d, c2);
+            float ang = (hash(seed + 10.0) < 0.5 ? 0.0 : 3.14159) + radians(mix(-40.0, 40.0, hash(seed + 12.0)));
+            float L = 0.22 + 0.16 * hash(seed + 13.0);
+            vec2 a = -vec2(cos(ang), sin(ang)) * L * 0.5;
+            float br = bolt(q, a, ang, L, seed, 0.0022);
+            br += 0.6 * bolt(q, boltAt(a, ang, L, seed, 0.5), ang + radians(35.0), L * 0.4, seed + 5.0, 0.0016);
+            col += mix(ELECTRIC, vec3(1.0), 0.5) * br * on * 1.3 + ELECTRIC * on * 0.03 * exp(-length(q) * 4.0);
+          }
+          if (d.y < -0.02) {                                                       // reflection in the glossy floor
+            vec3 M = vec3(C.x, 2.0 * uFloor - C.y, C.z);
+            vec3 pm = M - d * dot(d, M);
+            float rr = R0 * 0.9;
+            col += ACCENT * (rr * rr / (dot(pm, pm) + rr * rr)) * 0.35 * (0.75 + 0.25 * sin(t * 2.6 + 1.0) * uLive);
+          }
+          return col;
         }
 
         void main() {
@@ -1541,7 +1682,8 @@ Learning: Japanese, Mandarin, Korean, Indonesian
             texture2D(uTex, rayUv(n, th)).g,
             texture2D(uTex, rayUv(n, th * (1.0 - ca))).b);
 
-          vec2 uv = rayUv(n, th);
+          vec3 dir = rayDir(n, th);
+          vec2 uv = dirUv(dir);
           float lum = dot(col, vec3(0.299, 0.587, 0.114));
           float glow = smoothstep(0.22, 0.8, lum);
           float wave = pow(0.5 + 0.5 * sin(uv.x * 37.699 - uTime * 0.8 + uv.y * 9.0), 8.0);
@@ -1555,6 +1697,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           float dl = abs(mod(lon - uHi.x + 3.1415927, 6.2831853) - 3.1415927);
           float box = (1.0 - smoothstep(uHi.z * 0.92, uHi.z * 1.12, dl))
                     * (1.0 - smoothstep(uHi.w * 0.9, uHi.w * 1.2, abs(lat - uHi.y)));
+          if (uCore.w > 0.0) col += liveCore(dir);         // spinning core, rings, lightning
           col *= 1.0 - 0.5 * uDim * (1.0 - box);           // dim the world behind open panels
           col += col * glow * box * uHiAmt * 1.3 + vec3(1.0, 0.36, 0.12) * box * uHiAmt * 0.035;
 
@@ -1584,7 +1727,8 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       const U = {};
-      ['uTex', 'uRes', 'uTime', 'uYaw', 'uPitch', 'uFov', 'uFx', 'uHi', 'uHiAmt', 'uDim'].forEach(k => U[k] = gl.getUniformLocation(prog, k));
+      ['uTex', 'uRes', 'uTime', 'uYaw', 'uPitch', 'uFov', 'uFx', 'uHi', 'uHiAmt', 'uDim', 'uCore', 'uFloor', 'uLive'].forEach(k => U[k] = gl.getUniformLocation(prog, k));
+      gl.uniform1f(U.uLive, reduceMotion ? 0 : 1);
 
       const tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
@@ -2201,6 +2345,10 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           data.signs.forEach(s => {
             signs[s.id] = { id: s.id, yaw: wrapAngle(s.yaw * DEG), pitch: s.pitch * DEG, halfW: s.halfW * DEG, halfH: s.halfH * DEG };
           });
+          if (data.core) {                    // the live, animated core (see liveCore in the shader)
+            gl.uniform4f(U.uCore, data.core.x, data.core.y, data.core.z, data.core.r);
+            gl.uniform1f(U.uFloor, data.core.floor);
+          }
           order = Object.values(signs).sort((a, b) => ((a.yaw + TAU) % TAU) - ((b.yaw + TAU) % TAU));
           buildSigns();
           buildCompass();

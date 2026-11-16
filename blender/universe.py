@@ -57,6 +57,13 @@ HERO = dict(dist=14.0, kicker="PORTFOLIO  //  SINGAPORE", line1="AZRI", line2="B
             sub="ASPIRING SOFTWARE ENGINEER")
 SIGN_INFO = []   # filled while building; used to keep clutter out from in front of signs
 
+# The glowing core and its lightning are drawn live by the website's shader (spinning,
+# breathing, real flickering strikes), so they're left out of the still render.
+# Set LIVE_CORE = False to bake them into the image instead.
+LIVE_CORE = True
+CORE_POS = Vector((0, 50, 32))   # high and far, so it glows above the name sign
+CORE_RADIUS = 7.5
+
 
 def srgb(hex_str):
     """'#ff5b1f' -> linear RGBA tuple (Blender works in linear colour)."""
@@ -624,9 +631,9 @@ def build_dome():
 
 def build_core():
     """Focal point straight ahead (+Y): what the site opens looking at."""
-    c = Vector((0, 50, 32))   # high and far, so it glows above the name sign
+    c = CORE_POS.copy()
     bm = bmesh.new()
-    bmesh.ops.create_icosphere(bm, subdivisions=1, radius=7.5)
+    bmesh.ops.create_icosphere(bm, subdivisions=1, radius=CORE_RADIUS)
     shell = mesh_object("CoreShell", bm, emission_material("CoreShell", ACCENT, 14.0))
     shell.location = c
     shell.rotation_euler = (0.4, 0.2, 0.7)
@@ -876,12 +883,13 @@ def main():
     build_floor()
     build_dome()
     build_signs(fonts)
-    core = build_core()
+    core = CORE_POS.copy() if LIVE_CORE else build_core()
     build_orbits()
     build_towers()
     anchors = build_shapes(core)
     build_network(anchors)
-    build_bolts(core, anchors)
+    if not LIVE_CORE:
+        build_bolts(core, anchors)
     build_streams()
     build_dust()
 
@@ -889,7 +897,11 @@ def main():
     import json
     with open(os.path.join(OUT_DIR, "world.json"), "w") as f:
         keep = ("id", "yaw", "pitch", "halfW", "halfH")
-        json.dump({"signs": [{k: s[k] for k in keep} for s in SIGN_INFO]}, f, indent=1)
+        data = {"signs": [{k: s[k] for k in keep} for s in SIGN_INFO]}
+        if LIVE_CORE:   # in the shader's axes: x right, y up, z forward
+            data["core"] = {"x": CORE_POS.x, "y": CORE_POS.z, "z": CORE_POS.y, "r": CORE_RADIUS,
+                            "floor": FLOOR_Z}
+        json.dump(data, f, indent=1)
     print("[universe] wrote assets/bg/world.json")
     if not args.preview:
         bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
