@@ -57,6 +57,18 @@
       "thumb": "assets/art/web/nangong-yu-sketch.webp",
       "title": "Nangong Yu",
       "category": "Sketches"
+    },
+    {
+      "file": "assets/art/tsumigucchi-sketch.jpg",
+      "thumb": "assets/art/web/tsumigucchi-sketch.webp",
+      "title": "Tsumigucchi",
+      "category": "Sketches"
+    },
+    {
+      "file": "assets/art/yuri-sleep-together-sketch.jpg",
+      "thumb": "assets/art/web/yuri-sleep-together-sketch.webp",
+      "title": "Yuri Sleep Together",
+      "category": "Sketches"
     }
   ]
 }
