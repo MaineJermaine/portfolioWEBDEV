@@ -8,13 +8,23 @@
   <script>
     // Pick 3D world or 2D page before first paint (no flash of the wrong layout).
     // ?view=2d / ?view=3d in the URL, else the visitor's last choice, else 3D.
+    // The 3D world has two themes: the universe (dev work) and the art room (?theme=room).
     (function () {
       try {
-        var want = new URLSearchParams(location.search).get('view') || localStorage.getItem('view')
+        var q = new URLSearchParams(location.search);
+        var want = q.get('view') || localStorage.getItem('view')
           || (matchMedia('(prefers-reduced-motion: reduce)').matches ? '2d' : '3d');
         if (want === '3d') document.documentElement.classList.add('world');
+        if ((q.get('theme') || localStorage.getItem('theme')) === 'room') document.documentElement.classList.add('room');
       } catch (e) {}
     })();
+  </script>
+  <!-- Three.js for the art room (assets/room/room.js), only downloaded when the room is opened -->
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -359,6 +369,128 @@
     .teaser-bar span { white-space: nowrap; }
     @media (max-width: 600px) { .teaser { width: 210px; } .teaser-cap .topen, .teaser-bar .tlong { display: none; } }
     @media (prefers-reduced-motion: reduce) { .teaser-stage img.show { animation: none; } .teaser-flash.go { animation: none; } }
+
+    /* ---------- art room (3D theme) ---------- */
+    .theme-btn svg { width: 14px; height: 14px; }
+    .theme-btn.on { border-color: var(--accent); color: var(--accent); }
+    .theme-btn.on:hover { background: var(--accent); color: var(--bg); }
+    .room-ui { display: none; }
+    html.world.room .room-ui { display: block; }
+    html.world.room .universe, html.world.room .universe-scrim, html.world.room .world-ui { visibility: hidden; }
+    .room-canvas {
+      position: fixed; left: 0; top: 0; width: 100%; height: 100%; height: 100dvh; z-index: 2;
+      background: radial-gradient(ellipse at 50% 40%, #3a2617, #140e0a 70%);
+      cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+    }
+    .room-canvas.dragging { cursor: grabbing; }
+    .room-canvas.pointing { cursor: pointer; }
+    .room-canvas canvas { display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 1.2s ease; }
+    .room-canvas.ready canvas { opacity: 1; }
+    .room-tip {
+      position: fixed; left: 0; top: 0; z-index: 4; pointer-events: none; white-space: nowrap;
+      padding: 6px 10px; background: var(--accent); color: var(--bg); font-weight: 700;
+    }
+    .room-hint { z-index: 4; }
+    .room-hud {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 3; height: 58px;
+      display: flex; align-items: center; gap: 18px; padding: 0 var(--gutter);
+      border-top: 1px solid var(--line); background: rgba(22, 15, 10, 0.8);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    }
+    .room-hud-title { color: var(--accent); white-space: nowrap; }
+    .room-frames { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+    .room-frames button {
+      flex: none; padding: 4px 8px; border: 1px solid var(--line-strong); color: var(--muted);
+      font-family: var(--mono); font-size: 12px; transition: color .2s, border-color .2s, background .2s;
+    }
+    .room-frames button.empty { border-style: dashed; color: var(--dim); }
+    .room-frames button:hover, .room-frames button.active { border-color: var(--accent); color: var(--ink); }
+    .room-frames button.active { background: var(--accent-soft); }
+    .room-now { margin-left: auto; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+    .room-label {
+      position: fixed; left: var(--gutter); bottom: 76px; z-index: 4; width: min(360px, calc(100vw - 2 * var(--gutter)));
+      background: rgba(20, 14, 10, 0.88); border: 1px solid var(--line-strong);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.5); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      animation: label-in .45s cubic-bezier(.2, .8, .2, 1);
+    }
+    @keyframes label-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+    .room-label-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; background: var(--ink); color: var(--bg); }
+    .room-label-bar .rl-no { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rl-back { flex: none; color: var(--bg); }
+    .rl-back span { opacity: .6; }
+    .rl-back:hover { color: var(--accent); }
+    .rl-title { margin: 16px 18px 0; font-size: 24px; font-weight: 800; font-stretch: 110%; line-height: 1.15; letter-spacing: -0.01em; }
+    .rl-meta { margin: 8px 18px 0; color: var(--accent); }
+    .rl-note { margin: 10px 18px 0; color: #cfcbc1; font-size: 14.5px; line-height: 1.5; }
+    .rl-ctrl { display: flex; margin-top: 16px; border-top: 1px solid var(--line); }
+    .rl-ctrl button { flex: 1; padding: 11px 8px; color: var(--muted); transition: color .2s, background .2s; }
+    .rl-ctrl button + button { border-left: 1px solid var(--line); }
+    .rl-ctrl button:hover { color: var(--ink); background: var(--accent-soft); }
+    .rl-ctrl .rl-full { color: var(--ink); }
+    @media (prefers-reduced-motion: reduce) { .room-label { animation: none; } }
+
+    /* hand-over flash between the universe and the art room: a CRT-style glow with scanlines */
+    .portal {
+      position: fixed; inset: 0; z-index: 45; pointer-events: none; opacity: 0;
+      background:
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.32) 0 2px, transparent 2px 4px),
+        radial-gradient(ellipse at 50% 50%, rgba(255, 168, 110, 0.95) 0%, rgba(255, 91, 31, 0.75) 28%, rgba(13, 13, 11, 0.97) 72%);
+      transition: opacity .75s ease;
+    }
+    .portal.on { opacity: 1; transition-duration: .26s; }
+    @media (prefers-reduced-motion: reduce) { .portal, .portal.on { transition: none; } }
+
+    /* full-size artwork viewer (used by the art room and the 2D gallery) */
+    .lightbox {
+      position: fixed; inset: 0; z-index: 80; display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center; gap: 16px; padding: 70px var(--gutter) 28px;
+      background: rgba(10, 8, 6, 0.92); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      opacity: 0; transition: opacity .3s;
+    }
+    .lightbox[hidden] { display: none; }
+    .lightbox.on { opacity: 1; }
+    .lb-figure { margin: 0; min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .lb-figure img { max-width: 100%; max-height: calc(100vh - 230px); max-height: calc(100dvh - 230px); object-fit: contain; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6); }
+    .lb-figure figcaption { text-align: center; max-width: 640px; }
+    .lb-title { margin: 0; font-size: clamp(20px, 2.4vw, 28px); font-weight: 800; font-stretch: 110%; line-height: 1.15; }
+    .lb-meta { margin: 8px 0 0; color: var(--accent); }
+    .lb-note { margin: 8px 0 0; color: #cfcbc1; font-size: 15px; }
+    .lb-count { display: block; margin-top: 10px; color: var(--dim); }
+    .lb-close { position: absolute; top: 18px; right: var(--gutter); display: inline-flex; gap: 10px; padding: 9px 14px; border: 1px solid var(--accent); }
+    .lb-close:hover { background: var(--accent); color: var(--bg); }
+    .lb-close span { color: var(--muted); }
+    .lb-nav { width: 48px; height: 48px; border: 1px solid var(--line-strong); font-size: 18px; transition: border-color .2s, background .2s; }
+    .lb-nav:hover { border-color: var(--accent); background: var(--accent-soft); }
+    @media (max-width: 600px) {
+      .lightbox { grid-template-columns: minmax(0, 1fr); padding-bottom: 90px; }
+      .lb-nav { position: absolute; bottom: 24px; }
+      .lb-nav.prev { left: var(--gutter); }
+      .lb-nav.next { right: var(--gutter); }
+      .room-hud-title { display: none; }
+      .room-now { display: none; }
+      .room-label { bottom: 70px; }
+      /* four buttons + the menu have to fit beside the logo */
+      .topbar-right { gap: 8px; }
+      .topbar-right .btn { padding: 10px; }
+      .theme-btn svg { display: none; }
+    }
+    @media (max-width: 370px) { .logo .mono { display: none; } }
+
+    /* ---------- 2D art gallery ---------- */
+    .art-grid { columns: 3 260px; column-gap: 16px; }
+    .art-cat { margin: 40px 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--line); color: var(--accent); }
+    .art-cat:first-child { margin-top: 0; }
+    .art-item {
+      display: block; width: 100%; margin: 0 0 16px; padding: 0; text-align: left; break-inside: avoid;
+      border: 1px solid var(--line); background: var(--bg-2); transition: border-color .25s;
+    }
+    .art-item:hover, .art-item:focus-visible { border-color: var(--accent); outline: none; }
+    .art-item img { width: 100%; height: auto; }
+    .art-item span { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; }
+    .art-item strong { font-weight: 700; color: var(--ink); }
+    .art-item em { font-style: normal; color: var(--muted); white-space: nowrap; }
+    .art-empty { padding: 48px 24px; border: 1px dashed var(--line-strong); color: var(--muted); text-align: center; }
+    .art-foot { margin-top: 28px; }
     .hero-body {
       position: relative; z-index: 2; flex: 1;
       display: grid; grid-template-columns: 1fr 360px; gap: 48px; align-items: end;
@@ -697,6 +829,48 @@
     </nav>
   </div>
 
+  <!-- Art room: the other 3D theme (built by assets/room/room.js) -->
+  <div class="room-ui" id="room">
+    <div class="room-canvas" aria-hidden="true"></div>
+    <div class="room-tip mono" hidden></div>
+    <div class="hint mono room-hint"><i></i><span>Setting up the room…</span></div>
+    <aside class="room-label" hidden aria-live="polite">
+      <div class="room-label-bar mono"><span class="rl-no"></span><button class="rl-back mono" type="button">✕ Step back <span>Esc</span></button></div>
+      <h3 class="rl-title"></h3>
+      <p class="rl-meta mono"></p>
+      <p class="rl-note"></p>
+      <div class="rl-ctrl mono">
+        <button type="button" data-step="-1">← Prev</button>
+        <button type="button" class="rl-full">⤢ Full size</button>
+        <button type="button" data-step="1">Next →</button>
+      </div>
+    </aside>
+    <nav class="room-hud mono" aria-label="Frames in the art room">
+      <span class="room-hud-title">◐ Art room</span>
+      <div class="room-frames"></div>
+      <span class="room-now"></span>
+    </nav>
+  </div>
+
+  <!-- glow flash covering the hand-over between the universe and the art room -->
+  <div class="portal" id="portal" aria-hidden="true"></div>
+
+  <!-- Full-size artwork viewer -->
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Artwork">
+    <button class="lb-close mono" type="button">✕ Close <span>Esc</span></button>
+    <button class="lb-nav prev" type="button" aria-label="Previous artwork">←</button>
+    <figure class="lb-figure">
+      <img alt="">
+      <figcaption>
+        <h3 class="lb-title"></h3>
+        <p class="lb-meta mono"></p>
+        <p class="lb-note"></p>
+        <span class="lb-count mono"></span>
+      </figcaption>
+    </figure>
+    <button class="lb-nav next" type="button" aria-label="Next artwork">→</button>
+  </div>
+
   <!-- Top bar -->
   <header class="topbar">
     <div class="wrap topbar-inner">
@@ -709,10 +883,15 @@
         <a href="#work"><span>02</span>Work</a>
         <a href="#experience"><span>03</span>Experience</a>
         <a href="#stack"><span>04</span>Stack</a>
-        <a href="#contact"><span>05</span>Contact</a>
+        <a href="#art"><span>05</span>Art</a>
+        <a href="#contact"><span>06</span>Contact</a>
       </nav>
       <div class="topbar-right">
         <span class="clock mono">SGT <b id="clock">--:--:--</b></span>
+        <button class="btn theme-btn" id="theme-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
+          <span class="mode-long">Art room</span><b class="mode-short">Art</b>
+        </button>
         <button class="btn mode-btn" id="mode-btn" type="button"><span class="mode-long">2D view</span><b class="mode-short">2D</b></button>
         <button class="btn btn-solid resume-btn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 4v12m0 0l-5-5m5 5l5-5M4 20h16"/></svg>
@@ -775,7 +954,7 @@
 
         <div class="profile-grid">
           <div class="reveal">
-            <img class="avatar" src="DIALYN.jpg" alt="Azri's avatar" width="112" height="112" loading="lazy">
+            <img class="avatar" src="assets/images/DIALYN.jpg" alt="Azri's avatar" width="112" height="112" loading="lazy">
             <p class="lede">
               Information Technology student at Nanyang Polytechnic with experience in <mark>web development</mark>, <mark>game programming</mark> and <mark>UI/UX design</mark>.
               <span class="muted">Skilled in Python, JavaScript, Luau and SQL, with academic knowledge of full-stack development, data structures and algorithms, and AWS cloud computing. Passionate about developing functional, intuitive software and solving technical problems.</span>
@@ -877,7 +1056,7 @@
             </div></div>
           </article>
 
-          <article class="proj reveal" data-media="DELEGATION1.png,DELEGATION2.png,DELEGATION3.png,DELEGATION4.png,DELEGATION5.png,DELEGATION6.png,DELEGATION7.png,DELEGATION8.png">
+          <article class="proj reveal" data-media="assets/images/DELEGATION1.png,assets/images/DELEGATION2.png,assets/images/DELEGATION3.png,assets/images/DELEGATION4.png,assets/images/DELEGATION5.png,assets/images/DELEGATION6.png,assets/images/DELEGATION7.png,assets/images/DELEGATION8.png">
             <button class="proj-head" type="button" aria-expanded="false">
               <span class="proj-no mono">P—03</span>
               <span class="proj-title">Event &amp; Delegation Management Platform</span>
@@ -900,7 +1079,7 @@
             </div></div>
           </article>
 
-          <article class="proj reveal" data-media="WEBDEV1.png,WEBDEV2.png,WEBDEV3.png,WEBDEV4.png,WEBDEV5.png,WEBDEV6.png,WEBDEV7.png">
+          <article class="proj reveal" data-media="assets/images/WEBDEV1.png,assets/images/WEBDEV2.png,assets/images/WEBDEV3.png,assets/images/WEBDEV4.png,assets/images/WEBDEV5.png,assets/images/WEBDEV6.png,assets/images/WEBDEV7.png">
             <button class="proj-head" type="button" aria-expanded="false">
               <span class="proj-no mono">P—04</span>
               <span class="proj-title">WhatsApp Sales Automation &amp; CRM</span>
@@ -923,7 +1102,7 @@
             </div></div>
           </article>
 
-          <article class="proj reveal" data-media="https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/totalvoid.mp4,https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/welcometoyourhome.mp4,ROBLOX1.png,ROBLOX2.png,ROBLOX3.png,ROBLOX4.png,ROBLOX6.png,ROBLOX8.png,ROBLOX9.png,ROBLOX10.png,ROBLOX11.png,ROBLOX12.png,ROBLOX13.png,ROBLOX14.png,ROBLOX15.png,ROBLOX16.png">
+          <article class="proj reveal" data-media="https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/totalvoid.mp4,https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/welcometoyourhome.mp4,assets/images/ROBLOX1.png,assets/images/ROBLOX2.png,assets/images/ROBLOX3.png,assets/images/ROBLOX4.png,assets/images/ROBLOX6.png,assets/images/ROBLOX8.png,assets/images/ROBLOX9.png,assets/images/ROBLOX10.png,assets/images/ROBLOX11.png,assets/images/ROBLOX12.png,assets/images/ROBLOX13.png,assets/images/ROBLOX14.png,assets/images/ROBLOX15.png,assets/images/ROBLOX16.png">
             <button class="proj-head" type="button" aria-expanded="false">
               <span class="proj-no mono">P—05</span>
               <span class="proj-title">Roblox Horror Experiences</span>
@@ -946,7 +1125,7 @@
             </div></div>
           </article>
 
-          <article class="proj reveal" data-media="UXWEBSITE1.png,https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/UXwebsite.mp4">
+          <article class="proj reveal" data-media="assets/images/UXWEBSITE1.png,https://media.githubusercontent.com/media/MaineJermaine/portfolioWEBDEV/main/assets/videos/UXwebsite.mp4">
             <button class="proj-head" type="button" aria-expanded="false">
               <span class="proj-no mono">P—06</span>
               <span class="proj-title">NYP Badminton CCA Website</span>
@@ -969,7 +1148,7 @@
             </div></div>
           </article>
 
-          <article class="proj reveal" data-media="nikobot.png">
+          <article class="proj reveal" data-media="assets/images/nikobot.png">
             <button class="proj-head" type="button" aria-expanded="false">
               <span class="proj-no mono">P—07</span>
               <span class="proj-title">Discord Admin Bot</span>
@@ -993,7 +1172,7 @@
             </div></div>
           </article>
 
-          <article class="proj reveal" data-media="TENSAKU0.png,TENSAKU1.png,TENSAKU2.png,TENSAKU3.png">
+          <article class="proj reveal" data-media="assets/images/TENSAKU0.png,assets/images/TENSAKU1.png,assets/images/TENSAKU2.png,assets/images/TENSAKU3.png">
             <button class="proj-head" type="button" aria-expanded="false">
               <span class="proj-no mono">P—08</span>
               <span class="proj-title">Tensaku — Japanese Chat Checker</span>
@@ -1151,11 +1330,26 @@
       </div>
     </section>
 
-    <!-- 05 Contact -->
-    <section class="contact" id="contact">
+    <!-- 05 Art (filled from assets/art/art.json) -->
+    <section class="sec" id="art">
       <div class="wrap">
         <div class="sec-head reveal">
           <span class="sec-no mono">[ 05 ]</span>
+          <h2 data-scramble>Art</h2>
+          <span class="sec-note mono">Click a piece to see it full size</span>
+        </div>
+        <div class="art-groups" id="art-grid"></div>
+        <div class="art-foot reveal">
+          <button class="btn" type="button" id="art-room-go">Walk through the art room ▸</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06 Contact -->
+    <section class="contact" id="contact">
+      <div class="wrap">
+        <div class="sec-head reveal">
+          <span class="sec-no mono">[ 06 ]</span>
           <span></span>
           <span class="sec-note mono">Open the channel</span>
         </div>
@@ -1451,6 +1645,115 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       });
     });
 
+    // ---------- Artwork (assets/art/art.json): shared by the 2D gallery and the 3D art room ----------
+    window.portfolioArt = fetch('assets/art/art.json')
+      .then(r => r.ok ? r.json() : { artworks: [] })
+      .then(d => (Array.isArray(d.artworks) ? d.artworks : []).filter(a => a && a.file))
+      .catch(() => []);
+
+    // full-size viewer: artLightbox.open(list, index, { onChange(i), onClose() })
+    window.artLightbox = (function () {
+      const el = document.getElementById('lightbox');
+      const img = el.querySelector('img');
+      const title = el.querySelector('.lb-title'), meta = el.querySelector('.lb-meta');
+      const note = el.querySelector('.lb-note'), count = el.querySelector('.lb-count');
+      const prev = el.querySelector('.prev'), next = el.querySelector('.next'), closeBtn = el.querySelector('.lb-close');
+      const pad2 = n => String(n).padStart(2, '0');
+      let list = [], i = 0, hooks = {}, back = null;
+      function render() {
+        const a = list[i];
+        img.src = a.file;
+        img.alt = a.title || 'Artwork';
+        title.textContent = a.title || 'Untitled';
+        meta.textContent = [a.category, a.year, a.medium, a.size].filter(Boolean).join(' · ');
+        note.textContent = a.note || '';
+        count.textContent = `${pad2(i + 1)} / ${pad2(list.length)}`;
+        prev.hidden = next.hidden = list.length < 2;
+      }
+      function open(l, idx, h) {
+        if (!l || !l[idx]) return;
+        list = l; i = idx; hooks = h || {};
+        back = document.activeElement;
+        render();
+        el.hidden = false;
+        requestAnimationFrame(() => el.classList.add('on'));
+        closeBtn.focus();
+      }
+      function close() {
+        if (el.hidden) return;
+        el.classList.remove('on');
+        el.hidden = true;
+        if (hooks.onClose) hooks.onClose();
+        if (back && back.focus) back.focus();
+      }
+      function step(d) {
+        i = (i + d + list.length) % list.length;
+        render();
+        if (hooks.onChange) hooks.onChange(i);
+      }
+      closeBtn.addEventListener('click', close);
+      prev.addEventListener('click', () => step(-1));
+      next.addEventListener('click', () => step(1));
+      el.addEventListener('click', e => { if (e.target === el) close(); });
+      addEventListener('keydown', e => {            // registered first, so it wins over the world's keys
+        if (el.hidden) return;
+        if (e.key === 'Escape') close();
+        else if (e.key === 'ArrowLeft' && list.length > 1) step(-1);
+        else if (e.key === 'ArrowRight' && list.length > 1) step(1);
+        else return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      });
+      return { open, close, isOpen: () => !el.hidden };
+    })();
+
+    // 2D gallery
+    window.portfolioArt.then(list => {
+      const grid = document.getElementById('art-grid');
+      if (!list.length) {
+        const p = document.createElement('p');
+        p.className = 'art-empty mono';
+        p.textContent = 'Artwork coming soon. The frames in the art room are ready and waiting.';
+        grid.hidden = true;                    // outside the column layout, so the line isn't split
+        grid.after(p);
+        return;
+      }
+      // one group per category ("GFX", "Sketches", …), in the order they first appear in art.json
+      const groups = new Map();
+      list.forEach((a, i) => {
+        const cat = a.category || 'Other';
+        if (!groups.has(cat)) {
+          const h = document.createElement('h3');
+          h.className = 'art-cat mono';
+          const g = document.createElement('div');
+          g.className = 'art-grid';
+          grid.append(h, g);
+          groups.set(cat, { h, g, n: 0 });
+        }
+        const grp = groups.get(cat);
+        grp.n++;
+        grp.h.textContent = `${cat} — ${String(grp.n).padStart(2, '0')}`;
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'art-item reveal';
+        const im = document.createElement('img');
+        im.src = a.thumb || a.file;
+        im.alt = a.title || 'Artwork';
+        im.loading = 'lazy';
+        const cap = document.createElement('span');
+        const t = document.createElement('strong');
+        t.textContent = a.title || 'Untitled';
+        const y = document.createElement('em');
+        y.className = 'mono';
+        y.textContent = a.year || '';
+        cap.append(t, y);
+        b.append(im, cap);
+        b.addEventListener('click', () => window.artLightbox.open(list, i));
+        grp.g.appendChild(b);
+        io.observe(b);
+      });
+    });
+
     // ---------- 3D world ----------
     // A 360° panorama rendered in Blender (blender/universe.py) is wrapped around the
     // viewer by one small fragment shader (fisheye lens + "energy" pulse). Two modes:
@@ -1466,6 +1769,11 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       const hero = document.querySelector('.hero');
       const readout = document.getElementById('readout');
       const modeBtn = document.getElementById('mode-btn');
+      const themeBtn = document.getElementById('theme-btn');
+      const roomGo = document.getElementById('art-room-go');
+      const portal = document.getElementById('portal');
+      let room = null, roomLoad = null;          // the art room, created on first visit
+      const stopRoom = () => { if (room) room.stop(); };
       const stage = document.getElementById('stage');
       const signLayer = document.getElementById('signs');
       const cardLayer = document.getElementById('cards');
@@ -1481,6 +1789,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       const easeOut = t => 1 - Math.pow(1 - t, 3);
       const easeInOut = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       const isWorld = () => html.classList.contains('world');
+      const inRoom = () => isWorld() && html.classList.contains('room');   // 3D, art-room theme
 
       // ----- 2D mode: dim the backdrop once you scroll past the hero -----
       function updateScrim() {
@@ -1499,6 +1808,8 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       function fallbackTo2D() {           // no WebGL / missing data: the classic page still works
         html.classList.remove('world', 'world-ready');
         modeBtn.hidden = true;
+        themeBtn.hidden = roomGo.hidden = true;     // the room needs WebGL too
+        stopRoom();
         updateScrim();
       }
       setModeLabel();
@@ -1742,6 +2053,8 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       // ----- view + projection (mirrors the shader exactly) -----
       const view = { yaw: 0, pitch: 0.1 };
       let fov = 150 * DEG, cssW = 1, cssH = 1;
+      let baseFov = fov, zoomFrom = null;   // zoomFrom: the "out of the art room's monitor" zoom, while it runs
+      let core = null, dive = null;         // the live core's position; dive: flying into it, on the way to the art room
       const pxPerRad = () => (Math.hypot(cssW, cssH) / 2) / (fov / 2);
 
       // world direction (yaw, pitch) -> CSS pixel position + angle from screen centre
@@ -1765,7 +2078,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.uniform2f(U.uRes, canvas.width, canvas.height);
         const w = isWorld();
-        fov = (cssW > cssH ? (w ? 140 : 150) : (w ? 120 : 128)) * DEG;
+        baseFov = fov = (cssW > cssH ? (w ? 140 : 150) : (w ? 120 : 128)) * DEG;
         gl.uniform1f(U.uFov, fov);
         if (openSec) layout(openSec);
       }
@@ -1842,7 +2155,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         stack: () => $$('#stack .stack-cell').map((c, i, all) => card([c], ['[ 04 ] Stack & skills', `${i + 1}/${all.length}`], 300)),
         experience: () => $$('#experience .xp').map((x, i) => card([x], ['[ 03 ] Experience', `E—0${i + 1}`], 440)),
         certified: () => $$('#certifications .cert').map((c, i) => card([c], ['[ 04.1 ] Certified', `C—0${i + 1}`], 340)),
-        contact: () => [card([$('#contact h2'), $('#contact .contact-grid')], ['[ 05 ] Contact', 'Open channel'], 470, 'wcard-contact')],
+        contact: () => [card([$('#contact h2'), $('#contact .contact-grid')], ['[ 06 ] Contact', 'Open channel'], 470, 'wcard-contact')],
       };
 
       // ----- focus mode: a panel zooms to the centre, the world dims behind it -----
@@ -1915,7 +2228,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       let openSec = null, openedAt = 0;
       // focus: optional element inside one of the section's cards to turn towards
       function open(id, focus) {
-        if (!signs[id]) return;
+        if (!signs[id] || dive) return;
         hideHint();
         if (openSec && openSec.id === id) { lookAtSection(openSec, focus); return; }
         close();
@@ -2031,14 +2344,17 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       const HREF = { '#profile': 'profile', '#work': 'work', '#experience': 'experience', '#stack': 'stack', '#certifications': 'certified', '#contact': 'contact' };
       const navLinks = [...document.querySelectorAll('#nav a')];
       function setActiveNav(id) {
-        navLinks.forEach(a => a.classList.toggle('active', HREF[a.getAttribute('href')] === id));
+        navLinks.forEach(a => a.classList.toggle('active', (a.getAttribute('href') === '#art' ? 'art' : HREF[a.getAttribute('href')]) === id));
       }
       // In 3D, in-page links turn you to the matching sign instead of scrolling.
+      // "Art" goes to the art room; any other link from the room goes back to the universe.
       document.addEventListener('click', e => {
         if (!isWorld()) return;
         const a = e.target.closest('a[href^="#"]');
         if (!a) return;
         const href = a.getAttribute('href');
+        if (href === '#art') { e.preventDefault(); goToRoom(); return; }
+        if (inRoom() && (href === '#top' || HREF[href])) setTheme('universe');
         if (href === '#top') { e.preventDefault(); close(); if (signs.hero) turnTo(signs.hero.yaw, 0.1); }
         else if (HREF[href]) { e.preventDefault(); open(HREF[href]); }
       });
@@ -2053,7 +2369,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       }
 
       stage.addEventListener('pointerdown', e => {
-        if (e.button !== 0 || focused || e.target.closest('.wcard, .wclose')) return;
+        if (e.button !== 0 || focused || dive || e.target.closest('.wcard, .wclose')) return;
         drag = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: 0, last: performance.now(), captured: false, bg: e.target === stage || e.target === signLayer || e.target === cardLayer };
         suppressClick = false;
         lastInput = performance.now();
@@ -2090,6 +2406,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       stage.addEventListener('pointerup', endDrag);
       stage.addEventListener('pointercancel', endDrag);
       stage.addEventListener('wheel', e => {
+        if (dive) { e.preventDefault(); return; }
         const c = e.target.closest('.wcard');
         if (focused) { if (!c) e.preventDefault(); return; }   // zoomed: only the panel scrolls
         if (c && c.scrollHeight > c.clientHeight) return;      // let a long panel scroll
@@ -2102,7 +2419,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         hideHint();
       }, { passive: false });
       addEventListener('keydown', e => {
-        if (!isWorld() || !dataReady || e.target.closest('input, textarea, select')) return;
+        if (!isWorld() || inRoom() || dive || !dataReady || e.target.closest('input, textarea, select')) return;
         if (e.key === 'Escape') { focused ? unfocus() : close(); return; }
         if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
         if (focused && openSec) {                  // zoomed: step through the projects
@@ -2188,11 +2505,25 @@ Learning: Japanese, Mandarin, Korean, Indonesian
       const t0 = performance.now();
       let last = t0, lastReadout = 0;
       function frame(now) {
+        if (inRoom()) { last = now; if (!lost) requestAnimationFrame(frame); return; }   // universe is hidden: idle
         const dt = Math.min(0.05, (now - last) / 1000);
         last = now;
         const t = reduceMotion ? 0 : (now - t0) / 1000;
         if (isWorld()) {
-          if (turn) {
+          if (dive) {                         // turning up to the core, then flying at it, faster and faster
+            const a = clamp((now - dive.t0) / dive.dur, 0, 1);
+            const turnE = easeInOut(clamp(a / 0.5, 0, 1));
+            const flyE = Math.pow(clamp((a - 0.12) / 0.88, 0, 1), 2.4);
+            view.yaw = wrapAngle(dive.y0 + dive.dy * turnE);
+            view.pitch = dive.p0 + dive.dp * turnE;
+            // the core is drawn live (not baked into the panorama), so it can really come closer:
+            // it grows faster than the background, which only zooms
+            const k = 1 - 0.88 * flyE;
+            gl.uniform4f(U.uCore, core.x * k, core.y * k, core.z * k, core.r);
+            fov = baseFov * (1 - 0.5 * flyE);
+            gl.uniform1f(U.uFov, fov);
+            if (a >= 0.84 && !dive.handed) { dive.handed = true; dive.done(); }
+          } else if (turn) {
             const a = clamp((now - turn.t0) / turn.dur, 0, 1), e = easeInOut(a);
             view.yaw = wrapAngle(turn.y0 + turn.dy * e);
             view.pitch = turn.p0 + turn.dp * e;
@@ -2223,6 +2554,12 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         dimAmt += ((openSec && isWorld() ? 1 : 0) - dimAmt) * 0.08;
         const hs = hiId && signs[hiId];
 
+        if (zoomFrom) {                       // arriving from the art room: pull back out of the monitor's view
+          const a = clamp((now - zoomFrom.t0) / zoomFrom.dur, 0, 1);
+          fov = baseFov * (zoomFrom.k + (1 - zoomFrom.k) * easeInOut(a));
+          gl.uniform1f(U.uFov, fov);
+          if (a >= 1) zoomFrom = null;
+        }
         gl.uniform1f(U.uTime, t);
         gl.uniform1f(U.uYaw, view.yaw);
         gl.uniform1f(U.uPitch, view.pitch);
@@ -2276,8 +2613,10 @@ Learning: Japanese, Mandarin, Korean, Indonesian
           html.classList.add('world-ready');
           showHint(touch ? 'Swipe to look around · Tap a sign' : 'Drag to look around · Click a sign', 9000);
         }
+        syncRoom();
       }
       function exitWorld() {
+        endDive();
         close();
         autoOpened.splice(0).forEach(p => p.querySelector('.proj-head').click());
         borrowed.splice(0).forEach(([n, mark]) => mark.replaceWith(n));
@@ -2290,6 +2629,7 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         classicBase = view.yaw - ((reduceMotion ? 0 : (performance.now() - t0) / 1000) * 0.02 + scrollY / max * 2.4);
         updateScrim();
         setModeLabel();
+        syncRoom();
       }
       modeBtn.addEventListener('click', () => {
         const toWorld = !isWorld();
@@ -2297,6 +2637,101 @@ Learning: Japanese, Mandarin, Korean, Indonesian
         if (toWorld) { classicScroll = scrollY; view.yaw = signs.hero ? signs.hero.yaw : 0; view.pitch = 0.1; enterWorld(); }
         else exitWorld();
       });
+
+      // ----- art room theme (assets/room/room.js, downloaded on first visit) -----
+      function setThemeLabel() {
+        const r = inRoom();
+        themeBtn.querySelector('.mode-long').textContent = r ? 'Universe' : 'Art room';
+        themeBtn.querySelector('.mode-short').textContent = r ? 'Dev' : 'Art';
+        themeBtn.setAttribute('aria-label', r ? 'Leave the art room for the universe (dev work)' : 'Open the art room');
+        themeBtn.classList.toggle('on', r);
+      }
+      function syncRoom() {                    // start / stop the room to match the current mode + theme
+        setThemeLabel();
+        if (!inRoom()) { stopRoom(); return; }
+        close();
+        setActiveNav('art');
+        const arrive = roomArrive;
+        roomArrive = null;
+        if (room) { room.start({ arrive }); return; }
+        if (roomLoad) return;
+        roomLoad = import('./assets/room/room.js')
+          .then(m => {
+            room = m.createRoom({
+              mount: document.getElementById('room'),
+              art: window.portfolioArt,
+              lightbox: window.artLightbox,
+              onUniverse: arriveFromRoom,
+            });
+            if (inRoom()) room.start({ arrive });
+          })
+          .catch(err => {
+            console.warn('room:', err);
+            roomLoad = null;
+            setTheme('universe');
+            showHint('The art room could not load. Check your connection and try again.', 6000);
+          });
+      }
+      function setTheme(name) {
+        html.classList.toggle('room', name === 'room');
+        try { localStorage.setItem('theme', name); } catch (e) {}
+        if (name !== 'room') { resize(); setActiveNav(null); }
+        syncRoom();
+      }
+      // A glow flash covers each hand-over between the two worlds, so neither is a hard cut.
+      let portalBusy = false;
+      function throughPortal(swap) {
+        if (portalBusy) return;
+        portalBusy = true;
+        portal.classList.add('on');
+        setTimeout(() => {
+          swap();
+          requestAnimationFrame(() => requestAnimationFrame(() => { portal.classList.remove('on'); portalBusy = false; }));
+        }, reduceMotion ? 0 : 260);
+      }
+      // The room has flown into its desk monitor, which shows the universe around the Intro sign:
+      // swap under the flash, then zoom the universe back out from that same view.
+      function arriveFromRoom() {
+        throughPortal(() => {
+          turn = null; vel.yaw = vel.pitch = 0;
+          if (signs.hero) { view.yaw = signs.hero.yaw; view.pitch = 0.1; }
+          setTheme('universe');
+          if (!reduceMotion) zoomFrom = { t0: performance.now(), dur: 1800, k: 0.4 };
+        });
+      }
+      function leaveRoom() {                   // the room's "Universe" button takes the same trip
+        if (room) room.leaveViaScreen(); else setTheme('universe');
+      }
+      // Universe -> art room: fly into the core; under the flash the room opens looking into its paper
+      // lantern (another glowing orb) and pulls back to the couch.
+      let roomArrive = null;
+      function endDive() {
+        if (!dive) return;
+        dive = null;
+        gl.uniform4f(U.uCore, core.x, core.y, core.z, core.r);
+        fov = baseFov;
+        gl.uniform1f(U.uFov, fov);
+      }
+      function goToRoom() {                    // works from the 2D page too
+        if (inRoom() || dive || portalBusy) return;
+        if (isWorld()) {
+          const swap = () => { endDive(); roomArrive = 'lantern'; setTheme('room'); };
+          if (!core || reduceMotion || !html.classList.contains('world-ready')) { throughPortal(swap); return; }
+          close(); hideHint();
+          turn = null; zoomFrom = null; vel.yaw = vel.pitch = 0;
+          dive = { t0: performance.now(), dur: 2000, y0: view.yaw, dy: wrapAngle(core.yaw - view.yaw), p0: view.pitch, dp: core.pitch - view.pitch,
+                   done: () => throughPortal(swap) };
+          return;
+        }
+        html.classList.add('room');
+        try { localStorage.setItem('theme', 'room'); localStorage.setItem('view', '3d'); } catch (e) {}
+        classicScroll = scrollY;
+        enterWorld();
+      }
+      themeBtn.addEventListener('click', () => { if (inRoom()) leaveRoom(); else goToRoom(); });
+      roomGo.addEventListener('click', goToRoom);
+      setThemeLabel();
+      if (inRoom()) syncRoom();
 
       // ----- loading -----
       let lost = false;
@@ -2346,7 +2781,9 @@ Learning: Japanese, Mandarin, Korean, Indonesian
             signs[s.id] = { id: s.id, yaw: wrapAngle(s.yaw * DEG), pitch: s.pitch * DEG, halfW: s.halfW * DEG, halfH: s.halfH * DEG };
           });
           if (data.core) {                    // the live, animated core (see liveCore in the shader)
-            gl.uniform4f(U.uCore, data.core.x, data.core.y, data.core.z, data.core.r);
+            const c = data.core;
+            core = { x: c.x, y: c.y, z: c.z, r: c.r, yaw: Math.atan2(c.x, c.z), pitch: Math.atan2(c.y, Math.hypot(c.x, c.z)) };
+            gl.uniform4f(U.uCore, c.x, c.y, c.z, c.r);
             gl.uniform1f(U.uFloor, data.core.floor);
           }
           order = Object.values(signs).sort((a, b) => ((a.yaw + TAU) % TAU) - ((b.yaw + TAU) % TAU));

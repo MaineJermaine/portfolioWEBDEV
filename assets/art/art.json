@@ -1,0 +1,32 @@
+{
+  "artworks": [
+    {
+      "file": "assets/art/Ena Colours GFX.png",
+      "thumb": "assets/art/web/ena-colours.webp",
+      "title": "Ena Colours",
+      "category": "GFX",
+      "frame": 1
+    },
+    {
+      "file": "assets/art/AMIA Kanade Casting MVA SRS GFX.jpg",
+      "thumb": "assets/art/web/amia-kanade-casting.webp",
+      "title": "AMIA Kanade Casting (MVA SRS)",
+      "category": "GFX",
+      "frame": 4
+    },
+    {
+      "file": "assets/art/Ena Tickets GFX.png",
+      "thumb": "assets/art/web/ena-tickets.webp",
+      "title": "Ena Tickets",
+      "category": "GFX",
+      "frame": 7
+    },
+    {
+      "file": "assets/art/CUNT Profile Banner GFX.png",
+      "thumb": "assets/art/web/profile-banner.webp",
+      "title": "CUNT Profile Banner",
+      "category": "GFX",
+      "frame": 9
+    }
+  ]
+}
