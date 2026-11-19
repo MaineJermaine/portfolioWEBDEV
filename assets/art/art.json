@@ -27,6 +27,36 @@
       "title": "CUNT Profile Banner",
       "category": "GFX",
       "frame": 9
+    },
+    {
+      "file": "assets/art/jerm-lvl-999-sketch.jpg",
+      "thumb": "assets/art/web/jerm-lvl-999-sketch.webp",
+      "title": "Jerm Lvl 999",
+      "category": "Sketches"
+    },
+    {
+      "file": "assets/art/evernight-sketch.jpg",
+      "thumb": "assets/art/web/evernight-sketch.webp",
+      "title": "Evernight",
+      "category": "Sketches"
+    },
+    {
+      "file": "assets/art/artoria-saber-sketch.jpg",
+      "thumb": "assets/art/web/artoria-saber-sketch.webp",
+      "title": "Artoria (Saber)",
+      "category": "Sketches"
+    },
+    {
+      "file": "assets/art/chisa-taki-sketch.jpg",
+      "thumb": "assets/art/web/chisa-taki-sketch.webp",
+      "title": "Chisa Taki",
+      "category": "Sketches"
+    },
+    {
+      "file": "assets/art/nangong-yu-sketch.jpg",
+      "thumb": "assets/art/web/nangong-yu-sketch.webp",
+      "title": "Nangong Yu",
+      "category": "Sketches"
     }
   ]
 }
