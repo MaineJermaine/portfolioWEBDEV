@@ -49,9 +49,13 @@ The room has 10 frames:
 | 08 | Beside the dresser | portrait |
 | 09 | Above the desk | landscape |
 | 10 | On the easel | portrait |
+| 11 | North wall, between the lamp and the bookshelf (spare) | portrait |
+| 12 | North wall, above the snake plant (spare) | small portrait |
+| 13 | South wall, left of the desk (spare) | portrait |
+| 14 | South wall, corner by the easel (spare) | small portrait |
 
-A piece with `"frame": n` hangs in frame n. A piece without one goes to the free frame whose shape is closest to its own, so wide pieces end up in the landscape frames and tall ones in the portrait frames. Each frame then resizes to the exact shape of its artwork.
+A piece with `"frame": n` hangs in frame n. A piece without one goes to the free frame whose shape is closest to its own, so wide pieces end up in the landscape frames and tall ones in the portrait frames. Frames 01–10 fill first; the spare frames 11–14 only appear in the room once a piece hangs in them, so there are never empty spares on the walls. Each frame then resizes to the exact shape of its artwork.
 
-You can list more than 10 pieces. The extras don't hang in the room, but they still appear in the 2D gallery and in the full-size viewer.
+You can list more than 14 pieces. The extras don't hang in the room, but they still appear in the 2D gallery and in the full-size viewer.
 
 To move or add frames, edit `SLOTS` at the top of `assets/room/room.js`.

@@ -30,6 +30,12 @@ const SLOTS = [
   { wall: 's', u: 2.48,  y: 1.62, w: 0.4,  h: 0.52, style: 'brass', where: 'By the dresser' },
   { wall: 's', u: -0.4,  y: 1.66, w: 0.74, h: 0.52, style: 'white', where: 'Above the desk' },
   { easel: true, w: 0.62, h: 0.78, where: 'On the easel' },
+  // Spare frames on the remaining bare wall. They stay hidden until there's art for them,
+  // so the room grows as pieces are added to art.json (the frames above fill first).
+  { wall: 'n', u: -2.18, y: 1.62, w: 0.5,  h: 0.66, style: 'black', spare: true, where: 'Between the lamp and the bookshelf' },
+  { wall: 'n', u: 2.3,   y: 1.72, w: 0.42, h: 0.56, style: 'black', spare: true, where: 'Above the snake plant' },
+  { wall: 's', u: -1.65, y: 1.62, w: 0.5,  h: 0.66, style: 'white', spare: true, where: 'Left of the desk' },
+  { wall: 's', u: -2.5,  y: 1.6,  w: 0.42, h: 0.56, style: 'white', spare: true, where: 'Corner by the easel' },
 ];
 const FRAME_STYLES = {
   black:  { color: 0x1c1a18, width: 0.026, rough: 0.45 },
@@ -941,9 +947,12 @@ export function createRoom({ mount, art, lightbox, onUniverse }) {
     return [s.w - edge, s.h - edge];
   }
   slots.forEach((slot, i) => {
+    if (slot.def.spare) return;                    // spare frames only appear once they hold art
     const [w, h] = innerSize(slot.def);
     buildFrame(i, placeholderTex(w / h), null);
   });
+  const live = i => !slots[i].def.spare || !!slots[i].art;   // frames that are in the room
+  const liveIdx = () => slots.map((_, i) => i).filter(live);
 
   // Which piece hangs where. "frame": n in art.json pins a piece to frame n; the rest go, in list
   // order, to the free frame whose shape is closest to theirs (so wide pieces land in wide frames).
@@ -956,11 +965,14 @@ export function createRoom({ mount, art, lightbox, onUniverse }) {
     });
     rest.forEach(it => {
       let best = -1, bd = Infinity;
-      slots.forEach((s, i) => {
-        if (taken.has(i)) return;
-        const [w, h] = innerSize(s.def), d = Math.abs(Math.log(w / h / it.aspect));
-        if (d < bd - 1e-6) { bd = d; best = i; }
-      });
+      for (const spare of [false, true]) {           // the main frames first, then the spares
+        slots.forEach((s, i) => {
+          if (taken.has(i) || !!s.def.spare !== spare) return;
+          const [w, h] = innerSize(s.def), d = Math.abs(Math.log(w / h / it.aspect));
+          if (d < bd - 1e-6) { bd = d; best = i; }
+        });
+        if (best >= 0) break;
+      }
       if (best >= 0) { taken.add(best); it.slot = best; }
     });
   }
@@ -1006,8 +1018,10 @@ export function createRoom({ mount, art, lightbox, onUniverse }) {
   function buildHud() {
     framesEl.innerHTML = '';
     slots.forEach((slot, i) => {
+      if (!live(i)) return;
       const a = slot.art;
       const b = document.createElement('button');
+      b.dataset.i = i;
       b.type = 'button';
       b.textContent = pad(i + 1);
       b.className = a ? '' : 'empty';
@@ -1026,7 +1040,7 @@ export function createRoom({ mount, art, lightbox, onUniverse }) {
   };
   function showLabel(i) {
     const a = slots[i].art, s = slots[i].def;
-    L.no.textContent = `${pad(i + 1)} / ${pad(slots.length)} · ${s.where}`;
+    L.no.textContent = `${pad(i + 1)} / ${pad(liveIdx().length)} · ${s.where}`;
     L.title.textContent = a ? (a.title || 'Untitled') : 'Empty frame';
     L.meta.textContent = a ? [a.category, a.year, a.medium, a.size].filter(Boolean).join(' · ') : 'Artwork coming soon';
     L.note.textContent = a ? (a.note || '') : '';
@@ -1095,12 +1109,14 @@ export function createRoom({ mount, art, lightbox, onUniverse }) {
   }
   function step(dir) {
     const from = focused != null ? focused : nearestSlot();
-    focusSlot((from + (focused != null ? dir : 0) + slots.length) % slots.length);
+    const ids = liveIdx(), k = Math.max(0, ids.indexOf(from));
+    focusSlot(ids[(k + (focused != null ? dir : 0) + ids.length) % ids.length]);
   }
   function nearestSlot() {
     const f = new THREE.Vector3(-Math.sin(view.yaw), 0, -Math.cos(view.yaw));
     let best = 0, bd = -Infinity;
     slots.forEach((s, i) => {
+      if (!live(i)) return;
       const d = slotCentre(i).c.sub(camPos).setY(0).normalize().dot(f);
       if (d > bd) { bd = d; best = i; }
     });
@@ -1300,7 +1316,7 @@ export function createRoom({ mount, art, lightbox, onUniverse }) {
     const act = focused != null ? focused : nearestSlot();
     if (act !== activeHud) {
       activeHud = act;
-      [...framesEl.children].forEach((b, i) => b.classList.toggle('active', i === act));
+      [...framesEl.children].forEach(b => b.classList.toggle('active', Number(b.dataset.i) === act));
       const a = slots[act].art;
       nowEl.textContent = `${pad(act + 1)} · ${a ? (a.title || 'Untitled') : 'Empty frame'}`;
     }
